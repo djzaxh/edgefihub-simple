@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+.vite
+
+# local tooling / reference material (not part of the app)
+.claude/
+edgefi-design/

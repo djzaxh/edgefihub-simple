@@ -1,0 +1,162 @@
+import React from 'react'
+import { QUEUE, CUSTOMERS, INT_NAMES, FLAGS, AUDIT, firstName } from '../data.js'
+import { Pill, Stat, ViewHeader, Card, listRowStyle, Chip } from '../components/ui.jsx'
+import { Warn, Check } from '../icons.jsx'
+
+const cell = (bold) => ({ padding: '11px 20px', borderBottom: '1px solid var(--line2)', fontSize: 13.5, fontWeight: bold ? 550 : 400, verticalAlign: 'middle' })
+const th = (align = 'left') => ({ textAlign: align, fontSize: 10.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--faint)', padding: '12px 20px', borderBottom: '1px solid var(--line)' })
+
+const datePill = (text) => (
+  <span style={{ background: 'var(--soft)', color: 'var(--muted)', fontSize: 11.5, fontWeight: 600, padding: '5px 11px', borderRadius: 7 }}>{text}</span>
+)
+
+/* ---------------------------------------------------------------- JML queue */
+export function Queue() {
+  const open = QUEUE.filter((q) => q.sk !== 'ok').length
+  const blocked = QUEUE.filter((q) => q.sk === 'warn').length
+  return (
+    <>
+      <ViewHeader title="JML queue">{datePill('Tuesday, Jul 15')}</ViewHeader>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 16 }}>
+        <Stat n={open} label="In flight" />
+        <Stat n={blocked} label="Blocked" color="var(--warn)" />
+        <Stat n="3" label="Fully automated" color="var(--purple)" />
+        <Stat n="12" label="Clients" />
+      </div>
+      <Card title="Workflows in flight">
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 860 }}>
+            <thead><tr>
+              {['Client', 'Person', 'Type', 'Current stage', 'Handler', 'Log', 'Age'].map((h, i) => (
+                <th key={i} style={th(i === 6 ? 'right' : 'left')}>{h}</th>
+              ))}
+            </tr></thead>
+            <tbody>
+              {QUEUE.map((q, i) => (
+                <tr key={i}>
+                  <td style={cell(true)}>{q.client}</td>
+                  <td style={{ ...cell(), color: 'var(--ink2)' }}>{q.person}</td>
+                  <td style={cell()}>{q.type}</td>
+                  <td style={cell()}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Pill kind={q.sk}>{q.status}</Pill>
+                      <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{q.stage}</span>
+                    </div>
+                  </td>
+                  <td style={{ ...cell(), color: 'var(--ink2)' }}>{q.handler}</td>
+                  <td style={cell()}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 600, color: 'var(--ok)' }}>
+                      <Check size={11} /> txn
+                    </span>
+                  </td>
+                  <td style={{ ...cell(), textAlign: 'right', color: 'var(--muted)', fontSize: 12.5, fontVariantNumeric: 'tabular-nums' }}>{q.age}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </>
+  )
+}
+
+/* ---------------------------------------------------------------- Clients */
+export function Customers({ onViewAs }) {
+  return (
+    <>
+      <ViewHeader title="Clients" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 16 }}>
+        <Stat n="12" label="Active clients" />
+        <Stat n="438" label="Users under management" />
+        <Stat n="1" label="Integration error" color="var(--warn)" />
+        <Stat n="7" label="JML workflows in flight" />
+      </div>
+      <Card title="All clients">
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
+            <thead><tr>
+              {['Client', 'Users', 'Posture', 'Integrations', 'Status', 'Plan', ''].map((h, i) => (
+                <th key={i} style={th(i === 1 ? 'right' : 'left')}>{h}</th>
+              ))}
+            </tr></thead>
+            <tbody>
+              {CUSTOMERS.map((c, i) => (
+                <tr key={i}>
+                  <td style={cell()}>
+                    <div style={{ fontSize: 13.5, fontWeight: 600 }}>{c.name}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{c.admin} · {c.adminRole}</div>
+                  </td>
+                  <td style={{ ...cell(), textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--ink2)' }}>{c.users}</td>
+                  <td style={cell()}><span style={{ fontSize: 14, fontWeight: 700, color: 'var(--purple)' }}>{c.grade}</span></td>
+                  <td style={cell()}>
+                    <div style={{ display: 'flex', gap: 5 }}>
+                      {c.ints.map((v, j) => (
+                        <span key={j} title={INT_NAMES[j] + (v === 1 ? ' — connected' : v === 2 ? ' — error' : ' — not connected')}
+                          style={{ width: 9, height: 9, borderRadius: '50%', background: v === 1 ? 'var(--ok)' : v === 2 ? 'var(--danger)' : 'var(--line-strong)' }} />
+                      ))}
+                    </div>
+                  </td>
+                  <td style={cell()}><Pill kind={c.sk}>{c.status}</Pill></td>
+                  <td style={{ ...cell(), color: 'var(--ink2)', fontSize: 12.5 }}>{c.plan}</td>
+                  <td style={{ ...cell(), textAlign: 'right' }}>
+                    <button className="btn btn-ghost btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={() => onViewAs(c)}>View as {firstName(c.admin)}</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </>
+  )
+}
+
+/* ---------------------------------------------------------------- Watchtower */
+export function Watchtower({ onFlag }) {
+  return (
+    <>
+      <ViewHeader title="Watchtower">{datePill('4 open across 12 clients')}</ViewHeader>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 16 }}>
+        <Stat n="2" label="Devices unpatched" color="var(--warn)" />
+        <Stat n="3" label="Training overdue" />
+        <Stat n="2" label="MFA gaps" />
+        <Stat n="1" label="Integration error" color="var(--danger)" />
+      </div>
+      <Card title="Flagged items">
+        {FLAGS.map((f, i) => (
+          <div key={i} className="row-hover" style={listRowStyle}>
+            <span style={{ color: 'var(--warn)', display: 'grid', placeItems: 'center' }}><Warn size={18} /></span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <b style={{ fontSize: 13, fontWeight: 550, display: 'block' }}>{f.title}</b>
+              <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{f.sub}</span>
+            </div>
+            <button className="btn btn-ghost btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={() => onFlag(f.cta)}>{f.cta}</button>
+          </div>
+        ))}
+      </Card>
+    </>
+  )
+}
+
+/* ---------------------------------------------------------------- Audit log */
+export function Audit({ onExport }) {
+  return (
+    <>
+      <ViewHeader title="Audit log">
+        <button className="btn btn-ghost" onClick={onExport}>Export</button>
+      </ViewHeader>
+      <Card title="All admin activity">
+        {AUDIT.map((a, i) => (
+          <div key={i} className="row-hover" style={{ ...listRowStyle, alignItems: 'flex-start' }}>
+            <div style={{ width: 120, fontSize: 11.5, color: 'var(--faint)', flexShrink: 0, paddingTop: 2 }}>{a.time}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 550 }}>{a.act}</div>
+              <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{a.why}</div>
+            </div>
+            <Chip purple={a.who === 'system'}>{a.who}</Chip>
+          </div>
+        ))}
+      </Card>
+    </>
+  )
+}
