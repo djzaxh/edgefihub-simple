@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import {
   NAV, BADGES, CLIENT_KEYS, TECH_KEYS, GRADE_PCT, TICKETS, PEOPLE, PRIOS, TRAINING, LICENSES, initials, firstName,
 } from './data.js'
-import { Logomark, Sun, Moon, Help as HelpIcon, Gear, Eye, Check } from './icons.jsx'
+import { Sun, Moon, Help as HelpIcon, Gear, Eye, Check } from './icons.jsx'
 import { Overview, Tickets, People, Security, Training, Costs } from './views/ClientViews.jsx'
 import { Queue, Customers, Watchtower, Audit } from './views/TechViews.jsx'
 import { KB, KBArticle, Settings } from './views/Help.jsx'
@@ -155,7 +155,10 @@ export default function App() {
     }
   }
 
-  const logoMark = <Logomark size={25} />
+  const logoMark = (
+    <img src={dark ? '/logomark-white.png' : '/logomark-purple.png'} alt="edgefi"
+      width={25} height={25} style={{ objectFit: 'contain', display: 'block' }} />
+  )
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>

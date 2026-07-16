@@ -99,11 +99,3 @@ export const Plus = ({ size }) => (
     <path d="M12 5v14M5 12h14" />
   </svg>
 )
-
-// edgefi logomark — a clean geometric "edge" mark in brand purple.
-export const Logomark = ({ size = 25 }) => (
-  <svg width={size} height={size} viewBox="0 0 32 32" style={{ flexShrink: 0 }} aria-hidden="true">
-    <rect x="1" y="1" width="30" height="30" rx="8" fill="var(--purple)" />
-    <path d="M10 11h11M10 16h8M10 21h11" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
-  </svg>
-)

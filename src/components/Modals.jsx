@@ -87,7 +87,7 @@ export function Manage({ person, onClose, onSave, onOffboard }) {
       <div className="dialog" style={{ maxWidth: 440 }} onClick={(e) => e.stopPropagation()}>
         <Header onClose={onClose}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 9, background: 'var(--soft)', border: '1px solid var(--line)', display: 'grid', placeItems: 'center', fontSize: 14, fontWeight: 600, color: 'var(--ink2)' }}>{initials(person.name)}</div>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--soft)', border: '1px solid var(--line)', display: 'grid', placeItems: 'center', fontSize: 14, fontWeight: 600, color: 'var(--ink2)' }}>{initials(person.name)}</div>
             <div>
               <div style={{ fontSize: 16, fontWeight: 600 }}>{person.name}</div>
               <div style={{ fontSize: 12, color: 'var(--muted)' }}>{person.email}</div>

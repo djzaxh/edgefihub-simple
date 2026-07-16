@@ -202,8 +202,17 @@ tbody tr:hover { background: var(--soft2); }
 }
 .dialog {
   background: var(--surface);
-  border-radius: 16px;
+  border-radius: 14px;
   width: 100%;
+  overflow: hidden; /* clip header/footer fills to the rounded corners */
   box-shadow: 0 16px 52px rgba(10,10,10,.16), 0 0 0 1px rgba(10,10,10,.05);
   animation: rise .26s cubic-bezier(.2,.8,.2,1) both;
 }
+
+/* keyboard focus ring — ink, per brand */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
