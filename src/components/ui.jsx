@@ -1,13 +1,24 @@
 import React from 'react'
 import { PILL, initials as toInitials, RING_C } from '../data.js'
 
-// Neutral status pill: subtle grey chip + a single small colored dot as the only
-// point of color, so tables/lists read as calm black-and-white with a quiet cue.
+// Neutral tag chip — used sparingly for standalone callouts (not per-row).
 export function Pill({ kind = 'mut', children }) {
   const p = PILL[kind] || PILL.mut
   return (
     <span className="pill" style={{ background: 'var(--soft)', color: 'var(--ink2)' }}>
       <span className="dot" style={{ background: p.dot, animation: p.pulse ? 'pulse 1.4s infinite' : 'none' }} />
+      {children}
+    </span>
+  )
+}
+
+// Lightweight inline status: a small dot + plain text, no chip background.
+// This is what rows in tables/lists use — far calmer than a badge per row.
+export function Status({ kind = 'mut', children, muted }) {
+  const p = PILL[kind] || PILL.mut
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: muted ? 'var(--muted)' : 'var(--ink2)', whiteSpace: 'nowrap' }}>
+      <span style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: p.dot, animation: p.pulse ? 'pulse 1.4s infinite' : 'none' }} />
       {children}
     </span>
   )

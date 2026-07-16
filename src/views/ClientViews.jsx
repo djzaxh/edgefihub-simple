@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import {
   HERO, CHART, CHART_LABELS, NIST, LICENSES, ACTIVITY, SEC_ACTIVITY, PILL,
 } from '../data.js'
-import { Pill, Stat, Avatar, ViewHeader, Card, GradeRing, Bar, ActivityFeed, listRowStyle } from '../components/ui.jsx'
+import { Pill, Status, Stat, Avatar, ViewHeader, Card, GradeRing, Bar, ActivityFeed, listRowStyle } from '../components/ui.jsx'
 import { Search } from '../icons.jsx'
 
 /* ---------------------------------------------------------------- Overview */
@@ -96,15 +96,15 @@ export function Tickets({ tickets, onWizard, onTicketAct }) {
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
             <thead><tr>{['Ticket', 'Requested by', 'Priority', 'Status', '', 'Age'].map((h, i) => (
-              <th key={i} style={{ textAlign: i === 5 ? 'right' : 'left', fontSize: 10.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--faint)', padding: '13px 24px', borderBottom: '1px solid var(--line)' }}>{h}</th>
+              <th key={i} style={{ textAlign: i === 5 ? 'right' : 'left', fontSize: 12, fontWeight: 500, color: 'var(--muted)', padding: '10px 24px', borderBottom: '1px solid var(--line2)' }}>{h}</th>
             ))}</tr></thead>
             <tbody>
               {tickets.map((t, i) => (
                 <tr key={i}>
                   <td style={cell(true)}>{t.name}</td>
                   <td style={{ ...cell(), color: 'var(--ink2)' }}>{t.by}</td>
-                  <td style={cell()}><Pill kind={t.pk}>{t.pri}</Pill></td>
-                  <td style={cell()}><Pill kind={t.sk}>{t.status}</Pill></td>
+                  <td style={{ ...cell(), color: t.pk === 'warn' ? 'var(--ink2)' : 'var(--muted)' }}>{t.pri}</td>
+                  <td style={cell()}><Status kind={t.sk}>{t.status}</Status></td>
                   <td style={{ ...cell(), textAlign: 'right' }}>
                     {t.act && !t.acted && (
                       <button className="btn btn-dark btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={() => onTicketAct(t)}>
@@ -143,7 +143,7 @@ export function People({ people, search, setSearch, onManage, onOnboard }) {
               <div style={{ fontSize: 13.5, fontWeight: 550 }}>{p.name}</div>
               <div style={{ fontSize: 12, color: 'var(--muted)' }}>{p.role} · {p.email}</div>
             </div>
-            <Pill kind={p.sk}>{p.status}</Pill>
+            <Status kind={p.sk}>{p.status}</Status>
             <button className="btn btn-ghost btn-sm" onClick={() => onManage(p)}>Manage</button>
           </div>
         ))}
@@ -213,14 +213,14 @@ export function Training({ training, nudged, onNudge }) {
               <Bar pct={u.pct} />
               <div style={{ width: 44, fontSize: 12.5, color: 'var(--ink2)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{u.pct}%</div>
               <div style={{ width: 150, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
-                {done && <Pill kind="ok">Complete</Pill>}
+                {done && <Status kind="ok">Complete</Status>}
                 {!done && u.overdue && !isNudged && (
                   <>
-                    <Pill kind="warn">Overdue</Pill>
+                    <Status kind="warn">Overdue</Status>
                     <button className="btn btn-dark btn-sm" onClick={() => onNudge(u.name)}>Nudge</button>
                   </>
                 )}
-                {isNudged && <Pill kind="mut">Nudged ✓</Pill>}
+                {isNudged && <Status kind="mut" muted>Nudged ✓</Status>}
               </div>
             </div>
           )

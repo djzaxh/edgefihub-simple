@@ -1,10 +1,10 @@
 import React from 'react'
 import { QUEUE, CUSTOMERS, INT_NAMES, FLAGS, AUDIT, firstName } from '../data.js'
-import { Pill, Stat, ViewHeader, Card, listRowStyle, Chip } from '../components/ui.jsx'
+import { Status, Stat, ViewHeader, Card, listRowStyle, Chip } from '../components/ui.jsx'
 import { Warn, Check } from '../icons.jsx'
 
 const cell = (bold) => ({ padding: '14px 24px', borderBottom: '1px solid var(--line2)', fontSize: 13.5, fontWeight: bold ? 550 : 400, verticalAlign: 'middle' })
-const th = (align = 'left') => ({ textAlign: align, fontSize: 10.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--faint)', padding: '13px 24px', borderBottom: '1px solid var(--line)' })
+const th = (align = 'left') => ({ textAlign: align, fontSize: 12, fontWeight: 500, color: 'var(--muted)', padding: '10px 24px', borderBottom: '1px solid var(--line2)' })
 
 const datePill = (text) => (
   <span style={{ background: 'var(--soft)', color: 'var(--muted)', fontSize: 11.5, fontWeight: 600, padding: '5px 11px', borderRadius: 7 }}>{text}</span>
@@ -39,8 +39,8 @@ export function Queue() {
                   <td style={cell()}>{q.type}</td>
                   <td style={cell()}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Pill kind={q.sk}>{q.status}</Pill>
-                      <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{q.stage}</span>
+                      <Status kind={q.sk}>{q.status}</Status>
+                      <span style={{ fontSize: 12.5, color: 'var(--faint)' }}>· {q.stage}</span>
                     </div>
                   </td>
                   <td style={{ ...cell(), color: 'var(--ink2)' }}>{q.handler}</td>
@@ -96,7 +96,7 @@ export function Customers({ onViewAs }) {
                       ))}
                     </div>
                   </td>
-                  <td style={cell()}><Pill kind={c.sk}>{c.status}</Pill></td>
+                  <td style={cell()}><Status kind={c.sk}>{c.status}</Status></td>
                   <td style={{ ...cell(), color: 'var(--ink2)', fontSize: 12.5 }}>{c.plan}</td>
                   <td style={{ ...cell(), textAlign: 'right' }}>
                     <button className="btn btn-ghost btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={() => onViewAs(c)}>View as {firstName(c.admin)}</button>
