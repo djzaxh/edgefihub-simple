@@ -31,11 +31,11 @@ Switch role live from the **Demo · view as** control in the sidebar.
 | People (onboarding/offboarding) | ✓ | — | ✓ | ✓ |
 | Security  | ✓ | ✓ | ✓ | — |
 | Security Training | ✓ | ✓ | ✓ | — |
-| Costs / billing | ✓ | ✓ | — | — |
+| Costs / licensing | ✓ | ✓ | ✓ | — |
 
 - **Owner** — full access; general overview + security focus.
 - **CFO** — costs & value focus; no user management.
-- **IT Manager** — technical ops (onboarding, tickets, security, training); no billing.
+- **IT Manager** — technical ops (onboarding, tickets, security, training, licensing).
 - **HR** — simplified: onboarding/offboarding only (lands on People).
 
 Navigating to a page the current role can't see falls back to its home page, so permissions

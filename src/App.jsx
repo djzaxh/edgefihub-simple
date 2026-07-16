@@ -11,12 +11,12 @@ import { Wizard, Manage, Offboard, TicketAction } from './components/Modals.jsx'
 // Per-role page permissions for client Modes — each role only sees what's relevant.
 //   Owner       — full access; general overview + security focus
 //   CFO         — costs/value focus; no user management (people)
-//   IT Manager  — technical ops: onboarding/offboarding, tickets, security, training; no billing
+//   IT Manager  — technical ops: onboarding/offboarding, tickets, security, training, licensing (costs)
 //   HR          — simplified: just onboarding/offboarding
 const ROLE_PAGES = {
   Owner:        ['overview', 'tickets', 'people', 'security', 'training', 'costs'],
   CFO:          ['overview', 'tickets', 'security', 'training', 'costs'],
-  'IT Manager': ['overview', 'tickets', 'people', 'security', 'training'],
+  'IT Manager': ['overview', 'tickets', 'people', 'security', 'training', 'costs'],
   HR:           ['overview', 'people'],
 }
 
@@ -83,7 +83,7 @@ export default function App() {
   // ---- derived persona
   const clientMode = workspace === 'Client' || !!imp
   const effRole = imp ? imp.role : role
-  const costsAllowed = clientMode && (effRole === 'Owner' || effRole === 'CFO')
+  const costsAllowed = clientMode && (ROLE_PAGES[effRole] || CLIENT_KEYS).includes('costs')
   const gradePct = GRADE_PCT[grade] ?? 0.78
   const userName = imp ? imp.name : clientMode ? 'Jane Smith' : 'Alex Torres'
   const userFirst = firstName(userName)
@@ -281,7 +281,7 @@ function Restricted() {
 const ROLE_FOCUS = {
   Owner: 'Full access · overview + security',
   CFO: 'Costs & value · no user management',
-  'IT Manager': 'Technical ops · no billing',
+  'IT Manager': 'Technical ops · onboarding + licensing',
   HR: 'Onboarding / offboarding only',
 }
 
