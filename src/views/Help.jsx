@@ -189,7 +189,7 @@ export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, 
                     style={{ ...rowBase, marginBottom: 8, opacity: pGhost === i ? 0.4 : 1 }}>
                     <span style={{ color: 'var(--faint)' }}><Grip /></span>
                     <span style={{ fontSize: 13.5, fontWeight: 500, flex: 1 }}>{p.k}</span>
-                    {i < 2 && <span className="pill" style={{ background: 'var(--purple-soft)', color: 'var(--purple)' }}>On overview</span>}
+                    {i < 2 && <span className="pill" style={{ background: 'var(--soft)', color: 'var(--muted)' }}>On overview</span>}
                   </div>
                 </React.Fragment>
               ))}

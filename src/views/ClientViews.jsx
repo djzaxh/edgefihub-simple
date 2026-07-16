@@ -26,8 +26,8 @@ export function Overview({ userFirst, grade, gradePct, prios, costsAllowed, tick
         <button className="btn btn-dark" style={{ marginLeft: 'auto' }} onClick={onWizard}>Ask for Help</button>
       </div>
 
-      <div className="ov-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 3fr', gap: 18, animation: 'slideUp .35s ease both' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div className="ov-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 3fr', gap: 20, animation: 'slideUp .35s ease both' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {heroCards.map((c, i) => (
             <div key={i} className="card" style={{ padding: '24px 28px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ fontSize: 13.5, fontWeight: 600 }}>{c.t}</div>
@@ -89,14 +89,14 @@ export function Tickets({ tickets, onWizard, onTicketAct }) {
       <ViewHeader title="Tickets">
         <button className="btn btn-dark" onClick={onWizard}>Request service</button>
       </ViewHeader>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="7" label="Open" /><Stat n="2.1d" label="Avg. age" /><Stat n="31" label="Resolved" />
       </div>
       <Card title="Open tickets">
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
             <thead><tr>{['Ticket', 'Requested by', 'Priority', 'Status', '', 'Age'].map((h, i) => (
-              <th key={i} style={{ textAlign: i === 5 ? 'right' : 'left', fontSize: 10.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--faint)', padding: '12px 20px', borderBottom: '1px solid var(--line)' }}>{h}</th>
+              <th key={i} style={{ textAlign: i === 5 ? 'right' : 'left', fontSize: 10.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--faint)', padding: '13px 24px', borderBottom: '1px solid var(--line)' }}>{h}</th>
             ))}</tr></thead>
             <tbody>
               {tickets.map((t, i) => (
@@ -122,7 +122,7 @@ export function Tickets({ tickets, onWizard, onTicketAct }) {
     </>
   )
 }
-const cell = (bold) => ({ padding: '11px 20px', borderBottom: '1px solid var(--line2)', fontSize: 13.5, fontWeight: bold ? 550 : 400 })
+const cell = (bold) => ({ padding: '14px 24px', borderBottom: '1px solid var(--line2)', fontSize: 13.5, fontWeight: bold ? 550 : 400 })
 
 /* ---------------------------------------------------------------- People */
 export function People({ people, search, setSearch, onManage, onOnboard }) {
@@ -169,8 +169,8 @@ export function Security({ grade, gradePct, onExport }) {
               <Pill kind="prov">Hardening controls</Pill>
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-              <span className="pill" style={{ background: 'var(--warn-bg)', color: 'var(--warn)' }}>MFA · 2 accounts</span>
-              <span className="pill" style={{ background: 'var(--warn-bg)', color: 'var(--warn)' }}>Patching · 2 devices</span>
+              <Pill kind="warn">MFA · 2 accounts</Pill>
+              <Pill kind="warn">Patching · 2 devices</Pill>
             </div>
           </div>
         </div>
@@ -180,7 +180,7 @@ export function Security({ grade, gradePct, onExport }) {
           <div key={i} className="card" style={{ padding: 16 }}>
             <div style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--faint)' }}>{w.name}</div>
             <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-.5px', marginTop: 6, fontVariantNumeric: 'tabular-nums' }}>{w.score}</div>
-            <div style={{ marginTop: 10 }}><Bar pct={w.score} color="var(--purple)" height={4} /></div>
+            <div style={{ marginTop: 10 }}><Bar pct={w.score} height={4} /></div>
             <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 9, lineHeight: 1.45 }}>{w.note}</div>
           </div>
         ))}
@@ -197,31 +197,30 @@ export function Training({ training, nudged, onNudge }) {
   return (
     <>
       <ViewHeader title="Security Training" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="84%" label="Overall completion" />
-        <Stat n="3" label="Overdue" color="var(--warn)" />
+        <Stat n="3" label="Overdue" />
         <Stat n="12" label="Modules assigned" />
       </div>
       <Card title="People">
         {training.map((u, i) => {
           const done = u.pct === 100
-          const color = u.overdue ? 'var(--warn)' : done ? 'var(--ok)' : 'var(--ink)'
           const isNudged = nudged.includes(u.name)
           return (
             <div key={i} className="row-hover" style={listRowStyle}>
               <Avatar name={u.name} />
               <div style={{ width: 170, fontSize: 13.5, fontWeight: 550 }}>{u.name}</div>
-              <Bar pct={u.pct} color={color} />
+              <Bar pct={u.pct} />
               <div style={{ width: 44, fontSize: 12.5, color: 'var(--ink2)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{u.pct}%</div>
               <div style={{ width: 150, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
-                {done && <span className="pill" style={{ background: 'var(--ok-bg)', color: 'var(--ok)' }}>Complete</span>}
+                {done && <Pill kind="ok">Complete</Pill>}
                 {!done && u.overdue && !isNudged && (
                   <>
-                    <span className="pill" style={{ background: 'var(--warn-bg)', color: 'var(--warn)' }}>Overdue</span>
+                    <Pill kind="warn">Overdue</Pill>
                     <button className="btn btn-dark btn-sm" onClick={() => onNudge(u.name)}>Nudge</button>
                   </>
                 )}
-                {isNudged && <span className="pill" style={{ background: 'var(--soft)', color: 'var(--muted)', animation: 'slideUp .25s ease both' }}>Nudged ✓</span>}
+                {isNudged && <Pill kind="mut">Nudged ✓</Pill>}
               </div>
             </div>
           )
@@ -238,23 +237,22 @@ export function Costs({ reclaimed, onReclaim, onReclaimAll }) {
   return (
     <>
       <ViewHeader title="Costs" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="$4,820" label="IT costs / mo" />
         <Stat n="$104" label="Per person / mo" />
         <Stat n={idleTotal} label="Idle licenses" />
       </div>
       <Card title="Licenses by title" right={idleTotal > 0 ? <button className="btn btn-dark btn-sm" onClick={onReclaimAll}>Reclaim {idleTotal} idle seats</button> : null}>
         {rows.map((l, i) => {
-          const full = l.used >= l.total
           return (
             <div key={i} className="row-hover" style={listRowStyle}>
               <div style={{ width: 220, fontSize: 13.5, fontWeight: 550 }}>{l.title}</div>
-              <Bar pct={Math.round(l.used / l.total * 100)} color={full ? 'var(--ink)' : 'var(--purple)'} />
+              <Bar pct={Math.round(l.used / l.total * 100)} />
               <div style={{ width: 70, fontSize: 12.5, color: 'var(--ink2)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{l.used} / {l.total}</div>
               <div style={{ width: 64, fontSize: 12.5, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{l.cost}</div>
               <div style={{ width: 112, display: 'flex', justifyContent: 'flex-end' }}>
                 {l.unused > 0 && <button className="btn btn-ghost" style={{ padding: '5px 11px', fontSize: 11.5, borderRadius: 7, fontWeight: 550, whiteSpace: 'nowrap' }} onClick={() => onReclaim(l.title, l.unused)}>Reclaim {l.unused} idle</button>}
-                {reclaimed.includes(l.title) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: 'var(--ok)', animation: 'slideUp .25s ease both' }}>✓ Reclaimed</span>}
+                {reclaimed.includes(l.title) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: 'var(--muted)', animation: 'slideUp .25s ease both' }}>✓ Reclaimed</span>}
               </div>
             </div>
           )

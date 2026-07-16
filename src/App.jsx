@@ -250,7 +250,7 @@ export default function App() {
               <div style={{ position: 'absolute', top: 0, height: '100%', width: '35%', background: 'var(--purple)', animation: 'loadbar .5s ease-out infinite' }} />
             </div>
           )}
-          <div className="content" style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '24px 30px 36px' }}>
+          <div className="content" style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '30px 38px 44px' }}>
             {renderView()}
           </div>
         </main>

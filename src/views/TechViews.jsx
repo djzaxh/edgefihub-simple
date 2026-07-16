@@ -3,8 +3,8 @@ import { QUEUE, CUSTOMERS, INT_NAMES, FLAGS, AUDIT, firstName } from '../data.js
 import { Pill, Stat, ViewHeader, Card, listRowStyle, Chip } from '../components/ui.jsx'
 import { Warn, Check } from '../icons.jsx'
 
-const cell = (bold) => ({ padding: '11px 20px', borderBottom: '1px solid var(--line2)', fontSize: 13.5, fontWeight: bold ? 550 : 400, verticalAlign: 'middle' })
-const th = (align = 'left') => ({ textAlign: align, fontSize: 10.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--faint)', padding: '12px 20px', borderBottom: '1px solid var(--line)' })
+const cell = (bold) => ({ padding: '14px 24px', borderBottom: '1px solid var(--line2)', fontSize: 13.5, fontWeight: bold ? 550 : 400, verticalAlign: 'middle' })
+const th = (align = 'left') => ({ textAlign: align, fontSize: 10.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--faint)', padding: '13px 24px', borderBottom: '1px solid var(--line)' })
 
 const datePill = (text) => (
   <span style={{ background: 'var(--soft)', color: 'var(--muted)', fontSize: 11.5, fontWeight: 600, padding: '5px 11px', borderRadius: 7 }}>{text}</span>
@@ -17,10 +17,10 @@ export function Queue() {
   return (
     <>
       <ViewHeader title="JML queue">{datePill('Tuesday, Jul 15')}</ViewHeader>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n={open} label="In flight" />
-        <Stat n={blocked} label="Blocked" color="var(--warn)" />
-        <Stat n="3" label="Fully automated" color="var(--purple)" />
+        <Stat n={blocked} label="Blocked" />
+        <Stat n="3" label="Fully automated" />
         <Stat n="12" label="Clients" />
       </div>
       <Card title="Workflows in flight">
@@ -45,7 +45,7 @@ export function Queue() {
                   </td>
                   <td style={{ ...cell(), color: 'var(--ink2)' }}>{q.handler}</td>
                   <td style={cell()}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 600, color: 'var(--ok)' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 600, color: 'var(--muted)' }}>
                       <Check size={11} /> txn
                     </span>
                   </td>
@@ -65,10 +65,10 @@ export function Customers({ onViewAs }) {
   return (
     <>
       <ViewHeader title="Clients" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="12" label="Active clients" />
         <Stat n="438" label="Users under management" />
-        <Stat n="1" label="Integration error" color="var(--warn)" />
+        <Stat n="1" label="Integration error" />
         <Stat n="7" label="JML workflows in flight" />
       </div>
       <Card title="All clients">
@@ -87,12 +87,12 @@ export function Customers({ onViewAs }) {
                     <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{c.admin} · {c.adminRole}</div>
                   </td>
                   <td style={{ ...cell(), textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--ink2)' }}>{c.users}</td>
-                  <td style={cell()}><span style={{ fontSize: 14, fontWeight: 700, color: 'var(--purple)' }}>{c.grade}</span></td>
+                  <td style={cell()}><span style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{c.grade}</span></td>
                   <td style={cell()}>
                     <div style={{ display: 'flex', gap: 5 }}>
                       {c.ints.map((v, j) => (
                         <span key={j} title={INT_NAMES[j] + (v === 1 ? ' — connected' : v === 2 ? ' — error' : ' — not connected')}
-                          style={{ width: 9, height: 9, borderRadius: '50%', background: v === 1 ? 'var(--ok)' : v === 2 ? 'var(--danger)' : 'var(--line-strong)' }} />
+                          style={{ width: 9, height: 9, borderRadius: '50%', background: v === 1 ? 'var(--faint)' : v === 2 ? 'var(--danger)' : 'var(--line-strong)' }} />
                       ))}
                     </div>
                   </td>
@@ -116,16 +116,16 @@ export function Watchtower({ onFlag }) {
   return (
     <>
       <ViewHeader title="Watchtower">{datePill('4 open across 12 clients')}</ViewHeader>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 16 }}>
-        <Stat n="2" label="Devices unpatched" color="var(--warn)" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
+        <Stat n="2" label="Devices unpatched" />
         <Stat n="3" label="Training overdue" />
         <Stat n="2" label="MFA gaps" />
-        <Stat n="1" label="Integration error" color="var(--danger)" />
+        <Stat n="1" label="Integration error" />
       </div>
       <Card title="Flagged items">
         {FLAGS.map((f, i) => (
           <div key={i} className="row-hover" style={listRowStyle}>
-            <span style={{ color: 'var(--warn)', display: 'grid', placeItems: 'center' }}><Warn size={18} /></span>
+            <span style={{ color: 'var(--muted)', display: 'grid', placeItems: 'center' }}><Warn size={18} /></span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <b style={{ fontSize: 13, fontWeight: 550, display: 'block' }}>{f.title}</b>
               <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{f.sub}</span>
@@ -153,7 +153,7 @@ export function Audit({ onExport }) {
               <div style={{ fontSize: 13, fontWeight: 550 }}>{a.act}</div>
               <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{a.why}</div>
             </div>
-            <Chip purple={a.who === 'system'}>{a.who}</Chip>
+            <Chip>{a.who}</Chip>
           </div>
         ))}
       </Card>

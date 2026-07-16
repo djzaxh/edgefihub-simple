@@ -1,10 +1,12 @@
 import React from 'react'
 import { PILL, initials as toInitials, RING_C } from '../data.js'
 
+// Neutral status pill: subtle grey chip + a single small colored dot as the only
+// point of color, so tables/lists read as calm black-and-white with a quiet cue.
 export function Pill({ kind = 'mut', children }) {
   const p = PILL[kind] || PILL.mut
   return (
-    <span className="pill" style={{ background: p.bg, color: p.fg }}>
+    <span className="pill" style={{ background: 'var(--soft)', color: 'var(--ink2)' }}>
       <span className="dot" style={{ background: p.dot, animation: p.pulse ? 'pulse 1.4s infinite' : 'none' }} />
       {children}
     </span>
@@ -47,7 +49,7 @@ export function Card({ title, right, children, style }) {
   return (
     <div className="card" style={{ overflow: 'hidden', animation: 'slideUp .4s ease both', ...style }}>
       {(title || right) && (
-        <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 10 }}>
           <b style={{ fontSize: 14.5, fontWeight: 600 }}>{title}</b>
           {right ? <div style={{ marginLeft: 'auto' }}>{right}</div> : null}
         </div>
@@ -84,7 +86,7 @@ export function Bar({ pct, color = 'var(--ink)', height = 6 }) {
 
 export const listRowStyle = {
   display: 'flex', alignItems: 'center', gap: 14,
-  padding: '10px 20px', borderBottom: '1px solid var(--line2)',
+  padding: '15px 24px', borderBottom: '1px solid var(--line2)',
 }
 
 // edgefi activity feed — shows automated / edgefi-handled actions.
@@ -94,18 +96,13 @@ export function ActivityFeed({ title = 'Recent activity', items, style }) {
       {items.map((a, i) => {
         const auto = a.kind === 'auto'
         return (
-          <div key={i} className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: '1px solid var(--line2)' }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: auto ? 'var(--purple)' : 'var(--edge)' }} />
+          <div key={i} className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '15px 24px', borderBottom: '1px solid var(--line2)' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: auto ? 'var(--purple)' : 'var(--faint)' }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 500 }}>{a.act}</div>
               <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{a.meta}</div>
             </div>
-            <span style={{
-              fontSize: 9.5, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase',
-              padding: '2.5px 7px', borderRadius: 5,
-              background: auto ? 'var(--purple-soft)' : 'var(--edge-bg)',
-              color: auto ? 'var(--purple)' : 'var(--edge)',
-            }}>{auto ? 'Automated' : 'edgefi'}</span>
+            <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: 'var(--muted)' }}>{auto ? 'Automated' : 'edgefi'}</span>
           </div>
         )
       })}
