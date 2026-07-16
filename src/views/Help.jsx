@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { KB_CATS, KB_ARTICLES, NAV } from '../data.js'
 import { ViewHeader, Card } from '../components/ui.jsx'
 import { Search, ChevRight, ChevLeft, Image, Trash, Grip, Plus } from '../icons.jsx'
@@ -66,19 +66,23 @@ export function KBArticle({ article, onBack, onWizard, toast }) {
 }
 
 /* ---------------------------------------------------------------- Settings */
-export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, setItemCfg, itemOrder, modeKeys, toast }) {
-  const [drag, setDrag] = useState(null)
+export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, setItemCfg, itemOrder, setItemOrder, modeKeys, toast }) {
+  const [dragPrio, setDragPrio] = useState(null)
+  const [dragKey, setDragKey] = useState(null)
+  const nextId = useRef(0)
 
-  const reorder = (from, to) => {
-    if (from === to) return
+  // priorities: reorder within the list
+  const reorderPrio = (from, to) => {
+    if (from === to || from == null) return
     const next = [...prios]
     const [m] = next.splice(from, 1)
     next.splice(to, 0, m)
     setPrios(next)
   }
 
+  // sections
   const rename = (id, name) => setCats(cats.map((c) => (c.id === id ? { ...c, name } : c)))
-  const addCat = () => setCats([...cats, { id: 'c' + Date.now(), name: 'New section' }])
+  const addCat = () => { nextId.current += 1; setCats([...cats, { id: 'sec' + nextId.current + '-' + cats.length, name: 'New section' }]) }
   const delCat = (id) => {
     if (cats.length <= 1) return
     const fallback = cats.find((c) => c.id !== id).id
@@ -88,22 +92,65 @@ export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, 
     setCats(cats.filter((c) => c.id !== id))
     toast('Section removed — pages moved')
   }
-  const moveItem = (k, cat) => setItemCfg({ ...itemCfg, [k]: { ...itemCfg[k], cat } })
   const toggleShow = (k) => setItemCfg({ ...itemCfg, [k]: { ...itemCfg[k], show: !itemCfg[k].show } })
+
+  // move a page: adopt targetCat, and land either before `beforeKey` or at the end of the section
+  const placeKey = (key, targetCat, beforeKey) => {
+    const nextCfg = { ...itemCfg, [key]: { ...itemCfg[key], cat: targetCat } }
+    setItemCfg(nextCfg)
+    setItemOrder((prev) => {
+      const arr = prev.filter((k) => k !== key)
+      let idx
+      if (beforeKey != null && beforeKey !== key) {
+        idx = arr.indexOf(beforeKey)
+      } else {
+        let last = -1
+        arr.forEach((k, i) => { if (nextCfg[k].cat === targetCat) last = i })
+        idx = last + 1
+      }
+      if (idx < 0) idx = arr.length
+      arr.splice(idx, 0, key)
+      return arr
+    })
+  }
+
+  // up/down: swap with the adjacent visible page in the same section (robust, no drag needed)
+  const bump = (k, dir) => {
+    const cat = itemCfg[k].cat
+    const sameCat = itemOrder.filter((x) => itemCfg[x].cat === cat && modeKeys.includes(x))
+    const pos = sameCat.indexOf(k)
+    const swap = sameCat[pos + dir]
+    if (!swap) return
+    setItemOrder((prev) => {
+      const arr = [...prev]
+      const ia = arr.indexOf(k), ib = arr.indexOf(swap)
+      ;[arr[ia], arr[ib]] = [arr[ib], arr[ia]]
+      return arr
+    })
+  }
+
+  const onItemDrop = (e, targetKey) => {
+    e.stopPropagation()
+    if (dragKey && dragKey !== targetKey) placeKey(dragKey, itemCfg[targetKey].cat, targetKey)
+    setDragKey(null)
+  }
+  const onSectionDrop = (catId) => { if (dragKey) placeKey(dragKey, catId, null); setDragKey(null) }
+
+  const arrowBtn = { width: 24, height: 22, borderRadius: 6, display: 'grid', placeItems: 'center', background: 'var(--surface)', border: '1px solid var(--line-strong)', color: 'var(--ink2)', cursor: 'pointer', fontSize: 11, lineHeight: 1 }
 
   return (
     <>
       <ViewHeader title="Settings" />
-      <div style={{ maxWidth: 600, display: 'flex', flexDirection: 'column', gap: 22 }}>
+      <div className={clientMode ? 'settings-grid' : 'settings-grid one'} style={{ display: 'grid', gap: 22, alignItems: 'start' }}>
 
         {clientMode && (
           <div className="card" style={{ padding: 20 }}>
             <b style={{ fontSize: 14.5, fontWeight: 600 }}>What matters most</b>
             <div style={{ fontSize: 12, color: 'var(--muted)', margin: '2px 0 14px' }}>Drag to reorder — the top two lead your overview.</div>
             {prios.map((p, i) => (
-              <div key={p.k} draggable onDragStart={() => setDrag(i)} onDragOver={(e) => e.preventDefault()}
-                onDrop={() => { reorder(drag, i); setDrag(null) }}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px', border: '1px solid var(--line)', borderRadius: 8, marginBottom: 8, cursor: 'grab', background: 'var(--surface)', opacity: drag === i ? 0.4 : 1, boxShadow: drag !== null && drag !== i ? 'none' : 'none' }}>
+              <div key={p.k} draggable onDragStart={() => setDragPrio(i)} onDragEnd={() => setDragPrio(null)}
+                onDragOver={(e) => e.preventDefault()} onDrop={() => { reorderPrio(dragPrio, i); setDragPrio(null) }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px', border: '1px solid var(--line)', borderRadius: 8, marginBottom: 8, cursor: 'grab', background: 'var(--surface)', opacity: dragPrio === i ? 0.4 : 1 }}>
                 <span style={{ color: 'var(--faint)' }}><Grip /></span>
                 <span style={{ fontSize: 13.5, fontWeight: 500, flex: 1 }}>{p.k}</span>
                 {i < 2 && <span className="pill" style={{ background: 'var(--purple-soft)', color: 'var(--purple)' }}>On overview</span>}
@@ -116,7 +163,7 @@ export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, 
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div>
               <b style={{ fontSize: 14.5, fontWeight: 600 }}>Sidebar</b>
-              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>Organize pages into sections and toggle visibility.</div>
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>Drag pages to reorder or move between sections — or use the arrows.</div>
             </div>
             <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={addCat}><Plus /> Add section</button>
           </div>
@@ -124,7 +171,7 @@ export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, 
             {cats.map((cat) => {
               const items = itemOrder.filter((k) => modeKeys.includes(k) && itemCfg[k].cat === cat.id)
               return (
-                <div key={cat.id}>
+                <div key={cat.id} onDragOver={(e) => e.preventDefault()} onDrop={() => onSectionDrop(cat.id)}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                     <input value={cat.name} onChange={(e) => rename(cat.id, e.target.value)}
                       style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--faint)', border: '1px solid transparent', borderRadius: 6, padding: '4px 6px', background: 'none', outline: 'none', flex: 1 }}
@@ -132,18 +179,18 @@ export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, 
                       onBlur={(e) => (e.target.style.borderColor = 'transparent')} />
                     {cats.length > 1 && <button className="iconbtn" onClick={() => delCat(cat.id)}><Trash /></button>}
                   </div>
-                  {items.map((k) => (
-                    <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', border: '1px solid var(--line)', borderRadius: 8, marginBottom: 6, background: 'var(--surface)' }}>
-                      <span style={{ color: 'var(--faint)' }}><Grip /></span>
+                  {items.map((k, i) => (
+                    <div key={k} draggable onDragStart={() => setDragKey(k)} onDragEnd={() => setDragKey(null)}
+                      onDragOver={(e) => e.preventDefault()} onDrop={(e) => onItemDrop(e, k)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', border: `1px solid ${dragKey === k ? 'var(--ink)' : 'var(--line)'}`, borderRadius: 8, marginBottom: 6, background: 'var(--surface)', opacity: dragKey === k ? 0.4 : 1, cursor: 'grab' }}>
+                      <span style={{ color: 'var(--faint)', cursor: 'grab' }}><Grip /></span>
                       <span style={{ fontSize: 13.5, fontWeight: 500, flex: 1, opacity: itemCfg[k].show ? 1 : 0.4 }}>{NAV[k]}</span>
-                      <select value={itemCfg[k].cat} onChange={(e) => moveItem(k, e.target.value)}
-                        style={{ fontSize: 12, padding: '4px 6px', borderRadius: 6, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink2)' }}>
-                        {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
+                      <button aria-label="Move up" style={{ ...arrowBtn, opacity: i === 0 ? 0.35 : 1 }} disabled={i === 0} onClick={() => bump(k, -1)}>↑</button>
+                      <button aria-label="Move down" style={{ ...arrowBtn, opacity: i === items.length - 1 ? 0.35 : 1 }} disabled={i === items.length - 1} onClick={() => bump(k, 1)}>↓</button>
                       <button className="btn btn-ghost btn-sm" onClick={() => toggleShow(k)}>{itemCfg[k].show ? 'Hide' : 'Show'}</button>
                     </div>
                   ))}
-                  {items.length === 0 && <div style={{ fontSize: 11.5, color: 'var(--faint)', fontStyle: 'italic', padding: '4px 12px' }}>No pages in this section</div>}
+                  {items.length === 0 && <div style={{ fontSize: 11.5, color: 'var(--faint)', fontStyle: 'italic', padding: '10px 12px', border: '1px dashed var(--line-strong)', borderRadius: 8 }}>Drop a page here</div>}
                 </div>
               )
             })}

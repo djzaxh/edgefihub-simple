@@ -47,7 +47,7 @@ export default function App() {
   const [prios, setPrios] = useState(() => PRIOS.map((k) => ({ k, on: true })))
   const [cats, setCats] = useState(DEFAULT_CATS)
   const [itemCfg, setItemCfg] = useState(DEFAULT_CFG)
-  const [itemOrder] = useState(DEFAULT_ORDER)
+  const [itemOrder, setItemOrder] = useState(DEFAULT_ORDER)
 
   // ---- modals
   const [wizard, setWizard] = useState(null)      // {step,type,title} | null
@@ -150,7 +150,7 @@ export default function App() {
       case 'audit': return <Audit onExport={() => toast('Audit log export started — CSV will download')} />
       case 'kb': return <KB onArticle={(a) => { setKbArt(a); go('kbArticle') }} onWizard={() => openWizard()} />
       case 'kbArticle': return <KBArticle article={kbArt} onBack={() => go('kb')} onWizard={() => openWizard()} toast={toast} />
-      case 'settings': return <Settings clientMode={clientMode} prios={prios} setPrios={setPrios} cats={cats} setCats={setCats} itemCfg={itemCfg} setItemCfg={setItemCfg} itemOrder={itemOrder} modeKeys={modeKeys} toast={toast} />
+      case 'settings': return <Settings clientMode={clientMode} prios={prios} setPrios={setPrios} cats={cats} setCats={setCats} itemCfg={itemCfg} setItemCfg={setItemCfg} itemOrder={itemOrder} setItemOrder={setItemOrder} modeKeys={modeKeys} toast={toast} />
       default: return null
     }
   }

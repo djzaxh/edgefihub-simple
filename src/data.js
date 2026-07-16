@@ -160,5 +160,19 @@ export const WIZ_TYPES = [
 ]
 export const WIZ_PRIOS = ['Whenever', 'Normal', 'Urgent']
 
+// --- activity feeds (fill the overview / security pages) ----------------------
+export const ACTIVITY = [
+  { act: 'Provisioned M365 license for Sam Reyes', meta: 'Today, 9:41 AM · completed in 4 min', kind: 'auto' },
+  { act: 'Quarantined phishing email for 6 inboxes', meta: 'Yesterday, 3:12 PM',              kind: 'auto' },
+  { act: 'Replaced failing SSD on LT-0093',          meta: 'Jul 12 · ticket #4811 closed',      kind: 'edge' },
+  { act: 'Offboarding for T. Nguyen completed',      meta: 'Jul 10 · 14 steps, all verified',   kind: 'edge' },
+]
+export const SEC_ACTIVITY = [
+  { act: 'MFA enforced on 3 new accounts',            meta: 'Today, 7:20 AM',              kind: 'auto' },
+  { act: 'Patched 12 endpoints — Chrome CVE',         meta: 'Yesterday · all verified',    kind: 'edge' },
+  { act: 'EDR full scan completed — 0 detections',    meta: 'Jul 14 · CrowdStrike',        kind: 'auto' },
+  { act: 'Backup restore test passed — 2.1 TB',       meta: 'Jul 8 · verified',            kind: 'edge' },
+]
+
 // --- settings: priorities -----------------------------------------------------
 export const PRIOS = ['Security score', 'Compliance', 'Open tickets', 'Training completion', 'IT costs / mo']

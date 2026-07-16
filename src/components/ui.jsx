@@ -87,6 +87,32 @@ export const listRowStyle = {
   padding: '10px 20px', borderBottom: '1px solid var(--line2)',
 }
 
+// edgefi activity feed — shows automated / edgefi-handled actions.
+export function ActivityFeed({ title = 'Recent activity', items, style }) {
+  return (
+    <Card title={title} style={style}>
+      {items.map((a, i) => {
+        const auto = a.kind === 'auto'
+        return (
+          <div key={i} className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: '1px solid var(--line2)' }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: auto ? 'var(--purple)' : 'var(--edge)' }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 500 }}>{a.act}</div>
+              <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{a.meta}</div>
+            </div>
+            <span style={{
+              fontSize: 9.5, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase',
+              padding: '2.5px 7px', borderRadius: 5,
+              background: auto ? 'var(--purple-soft)' : 'var(--edge-bg)',
+              color: auto ? 'var(--purple)' : 'var(--edge)',
+            }}>{auto ? 'Automated' : 'edgefi'}</span>
+          </div>
+        )
+      })}
+    </Card>
+  )
+}
+
 // A tabular chip label (audit "who", etc.)
 export function Chip({ children, purple }) {
   return (

@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import {
-  HERO, CHART, CHART_LABELS, NIST, LICENSES, PILL,
+  HERO, CHART, CHART_LABELS, NIST, LICENSES, ACTIVITY, SEC_ACTIVITY, PILL,
 } from '../data.js'
-import { Pill, Stat, Avatar, ViewHeader, Card, GradeRing, Bar, listRowStyle } from '../components/ui.jsx'
+import { Pill, Stat, Avatar, ViewHeader, Card, GradeRing, Bar, ActivityFeed, listRowStyle } from '../components/ui.jsx'
 import { Search } from '../icons.jsx'
 
 /* ---------------------------------------------------------------- Overview */
@@ -74,6 +74,10 @@ export function Overview({ userFirst, grade, gradePct, prios, costsAllowed, tick
           ))}
         </div>
       )}
+
+      <div style={{ marginTop: 18 }}>
+        <ActivityFeed title="Handled by edgefi" items={ACTIVITY} />
+      </div>
     </>
   )
 }
@@ -180,6 +184,9 @@ export function Security({ grade, gradePct, onExport }) {
             <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 9, lineHeight: 1.45 }}>{w.note}</div>
           </div>
         ))}
+      </div>
+      <div style={{ marginTop: 18 }}>
+        <ActivityFeed title="Recent security activity" items={SEC_ACTIVITY} />
       </div>
     </>
   )
