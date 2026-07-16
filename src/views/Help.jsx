@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react'
 import { KB_CATS, KB_ARTICLES, NAV } from '../data.js'
 import { ViewHeader, Card } from '../components/ui.jsx'
 import { Search, ChevRight, ChevLeft, Image, Trash, Grip, Plus } from '../icons.jsx'
+import { useFlip, DropLine } from '../components/dnd.jsx'
 
 /* ---------------------------------------------------------------- Knowledge base */
 export function KB({ onArticle, onWizard }) {
@@ -67,22 +68,40 @@ export function KBArticle({ article, onBack, onWizard, toast }) {
 
 /* ---------------------------------------------------------------- Settings */
 export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, setItemCfg, itemOrder, setItemOrder, modeKeys, toast }) {
-  const [dragPrio, setDragPrio] = useState(null)
-  const [dragKey, setDragKey] = useState(null)
   const nextId = useRef(0)
+  const priosRef = useRef(null)
+  const sideRef = useRef(null)
+  useFlip(priosRef)
+  useFlip(sideRef)
 
-  // priorities: reorder within the list
-  const reorderPrio = (from, to) => {
-    if (from === to || from == null) return
-    const next = [...prios]
-    const [m] = next.splice(from, 1)
-    next.splice(to, 0, m)
-    setPrios(next)
+  // --- priorities drag (single list) ---
+  const pDrag = useRef(null)                 // dragged index (synchronous)
+  const [pGhost, setPGhost] = useState(null) // faded source (deferred so the drag preview is crisp)
+  const [pOver, setPOver] = useState(null)   // insertion gap index
+  const startPrio = (i) => { pDrag.current = i; setTimeout(() => setPGhost(i), 0) }
+  const overPrio = (e, i) => {
+    e.preventDefault()
+    const r = e.currentTarget.getBoundingClientRect()
+    setPOver(e.clientY > r.top + r.height / 2 ? i + 1 : i)
   }
+  const dropPrio = () => {
+    const from = pDrag.current
+    if (from != null && pOver != null) {
+      const to = from < pOver ? pOver - 1 : pOver
+      if (to !== from) {
+        const next = [...prios]
+        const [m] = next.splice(from, 1)
+        next.splice(to, 0, m)
+        setPrios(next)
+      }
+    }
+    endPrio()
+  }
+  const endPrio = () => { pDrag.current = null; setPGhost(null); setPOver(null) }
 
-  // sections
+  // --- sections ---
   const rename = (id, name) => setCats(cats.map((c) => (c.id === id ? { ...c, name } : c)))
-  const addCat = () => { nextId.current += 1; setCats([...cats, { id: 'sec' + nextId.current + '-' + cats.length, name: 'New section' }]) }
+  const addCat = () => { nextId.current += 1; setCats([...cats, { id: 'sec' + nextId.current, name: 'New section' }]) }
   const delCat = (id) => {
     if (cats.length <= 1) return
     const fallback = cats.find((c) => c.id !== id).id
@@ -94,14 +113,15 @@ export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, 
   }
   const toggleShow = (k) => setItemCfg({ ...itemCfg, [k]: { ...itemCfg[k], show: !itemCfg[k].show } })
 
-  // move a page: adopt targetCat, and land either before `beforeKey` or at the end of the section
+  // move a page: adopt targetCat, land before `beforeKey` (or at section end when null)
   const placeKey = (key, targetCat, beforeKey) => {
+    if (beforeKey === key) return
     const nextCfg = { ...itemCfg, [key]: { ...itemCfg[key], cat: targetCat } }
     setItemCfg(nextCfg)
     setItemOrder((prev) => {
       const arr = prev.filter((k) => k !== key)
       let idx
-      if (beforeKey != null && beforeKey !== key) {
+      if (beforeKey != null) {
         idx = arr.indexOf(beforeKey)
       } else {
         let last = -1
@@ -114,12 +134,11 @@ export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, 
     })
   }
 
-  // up/down: swap with the adjacent visible page in the same section (robust, no drag needed)
+  // up/down: swap with the adjacent visible page in the same section (keyboard-friendly fallback)
   const bump = (k, dir) => {
     const cat = itemCfg[k].cat
     const sameCat = itemOrder.filter((x) => itemCfg[x].cat === cat && modeKeys.includes(x))
-    const pos = sameCat.indexOf(k)
-    const swap = sameCat[pos + dir]
+    const swap = sameCat[sameCat.indexOf(k) + dir]
     if (!swap) return
     setItemOrder((prev) => {
       const arr = [...prev]
@@ -129,14 +148,28 @@ export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, 
     })
   }
 
-  const onItemDrop = (e, targetKey) => {
-    e.stopPropagation()
-    if (dragKey && dragKey !== targetKey) placeKey(dragKey, itemCfg[targetKey].cat, targetKey)
-    setDragKey(null)
+  // --- sidebar drag (multiple sections, cross-section) ---
+  const sDrag = useRef(null)
+  const [sGhost, setSGhost] = useState(null)
+  const [drop, setDrop] = useState(null)     // { cat, index } insertion point
+  const startPage = (k) => { sDrag.current = k; setTimeout(() => setSGhost(k), 0) }
+  const overPage = (e, catId, i) => {
+    e.preventDefault(); e.stopPropagation()
+    const r = e.currentTarget.getBoundingClientRect()
+    setDrop({ cat: catId, index: e.clientY > r.top + r.height / 2 ? i + 1 : i })
   }
-  const onSectionDrop = (catId) => { if (dragKey) placeKey(dragKey, catId, null); setDragKey(null) }
+  const dropPage = () => {
+    const key = sDrag.current
+    if (key && drop) {
+      const sec = itemOrder.filter((k) => modeKeys.includes(k) && itemCfg[k].cat === drop.cat)
+      placeKey(key, drop.cat, sec[drop.index] ?? null)
+    }
+    endPage()
+  }
+  const endPage = () => { sDrag.current = null; setSGhost(null); setDrop(null) }
 
   const arrowBtn = { width: 24, height: 22, borderRadius: 6, display: 'grid', placeItems: 'center', background: 'var(--surface)', border: '1px solid var(--line-strong)', color: 'var(--ink2)', cursor: 'pointer', fontSize: 11, lineHeight: 1 }
+  const rowBase = { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 8, background: 'var(--surface)', cursor: 'grab', userSelect: 'none' }
 
   return (
     <>
@@ -147,15 +180,21 @@ export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, 
           <div className="card" style={{ padding: 20 }}>
             <b style={{ fontSize: 14.5, fontWeight: 600 }}>What matters most</b>
             <div style={{ fontSize: 12, color: 'var(--muted)', margin: '2px 0 14px' }}>Drag to reorder — the top two lead your overview.</div>
-            {prios.map((p, i) => (
-              <div key={p.k} draggable onDragStart={() => setDragPrio(i)} onDragEnd={() => setDragPrio(null)}
-                onDragOver={(e) => e.preventDefault()} onDrop={() => { reorderPrio(dragPrio, i); setDragPrio(null) }}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px', border: '1px solid var(--line)', borderRadius: 8, marginBottom: 8, cursor: 'grab', background: 'var(--surface)', opacity: dragPrio === i ? 0.4 : 1 }}>
-                <span style={{ color: 'var(--faint)' }}><Grip /></span>
-                <span style={{ fontSize: 13.5, fontWeight: 500, flex: 1 }}>{p.k}</span>
-                {i < 2 && <span className="pill" style={{ background: 'var(--purple-soft)', color: 'var(--purple)' }}>On overview</span>}
-              </div>
-            ))}
+            <div ref={priosRef} onDrop={dropPrio} onDragOver={(e) => e.preventDefault()}>
+              {prios.map((p, i) => (
+                <React.Fragment key={p.k}>
+                  {pOver === i && <DropLine />}
+                  <div data-flip={'p-' + p.k} draggable onDragStart={() => startPrio(i)} onDragEnd={endPrio}
+                    onDragOver={(e) => overPrio(e, i)} onDrop={dropPrio}
+                    style={{ ...rowBase, marginBottom: 8, opacity: pGhost === i ? 0.4 : 1 }}>
+                    <span style={{ color: 'var(--faint)' }}><Grip /></span>
+                    <span style={{ fontSize: 13.5, fontWeight: 500, flex: 1 }}>{p.k}</span>
+                    {i < 2 && <span className="pill" style={{ background: 'var(--purple-soft)', color: 'var(--purple)' }}>On overview</span>}
+                  </div>
+                </React.Fragment>
+              ))}
+              {pOver === prios.length && <DropLine />}
+            </div>
           </div>
         )}
 
@@ -167,11 +206,11 @@ export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, 
             </div>
             <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={addCat}><Plus /> Add section</button>
           </div>
-          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div ref={sideRef} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 18 }}>
             {cats.map((cat) => {
               const items = itemOrder.filter((k) => modeKeys.includes(k) && itemCfg[k].cat === cat.id)
               return (
-                <div key={cat.id} onDragOver={(e) => e.preventDefault()} onDrop={() => onSectionDrop(cat.id)}>
+                <div key={cat.id} onDragOver={(e) => e.preventDefault()} onDrop={dropPage}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                     <input value={cat.name} onChange={(e) => rename(cat.id, e.target.value)}
                       style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--faint)', border: '1px solid transparent', borderRadius: 6, padding: '4px 6px', background: 'none', outline: 'none', flex: 1 }}
@@ -180,17 +219,24 @@ export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, 
                     {cats.length > 1 && <button className="iconbtn" onClick={() => delCat(cat.id)}><Trash /></button>}
                   </div>
                   {items.map((k, i) => (
-                    <div key={k} draggable onDragStart={() => setDragKey(k)} onDragEnd={() => setDragKey(null)}
-                      onDragOver={(e) => e.preventDefault()} onDrop={(e) => onItemDrop(e, k)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', border: `1px solid ${dragKey === k ? 'var(--ink)' : 'var(--line)'}`, borderRadius: 8, marginBottom: 6, background: 'var(--surface)', opacity: dragKey === k ? 0.4 : 1, cursor: 'grab' }}>
-                      <span style={{ color: 'var(--faint)', cursor: 'grab' }}><Grip /></span>
-                      <span style={{ fontSize: 13.5, fontWeight: 500, flex: 1, opacity: itemCfg[k].show ? 1 : 0.4 }}>{NAV[k]}</span>
-                      <button aria-label="Move up" style={{ ...arrowBtn, opacity: i === 0 ? 0.35 : 1 }} disabled={i === 0} onClick={() => bump(k, -1)}>↑</button>
-                      <button aria-label="Move down" style={{ ...arrowBtn, opacity: i === items.length - 1 ? 0.35 : 1 }} disabled={i === items.length - 1} onClick={() => bump(k, 1)}>↓</button>
-                      <button className="btn btn-ghost btn-sm" onClick={() => toggleShow(k)}>{itemCfg[k].show ? 'Hide' : 'Show'}</button>
-                    </div>
+                    <React.Fragment key={k}>
+                      {drop && drop.cat === cat.id && drop.index === i && <DropLine />}
+                      <div data-flip={k} draggable onDragStart={() => startPage(k)} onDragEnd={endPage}
+                        onDragOver={(e) => overPage(e, cat.id, i)} onDrop={dropPage}
+                        style={{ ...rowBase, marginBottom: 6, opacity: sGhost === k ? 0.4 : 1 }}>
+                        <span style={{ color: 'var(--faint)' }}><Grip /></span>
+                        <span style={{ fontSize: 13.5, fontWeight: 500, flex: 1, opacity: itemCfg[k].show ? 1 : 0.4 }}>{NAV[k]}</span>
+                        <button aria-label="Move up" style={{ ...arrowBtn, opacity: i === 0 ? 0.35 : 1 }} disabled={i === 0} onClick={() => bump(k, -1)}>↑</button>
+                        <button aria-label="Move down" style={{ ...arrowBtn, opacity: i === items.length - 1 ? 0.35 : 1 }} disabled={i === items.length - 1} onClick={() => bump(k, 1)}>↓</button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => toggleShow(k)}>{itemCfg[k].show ? 'Hide' : 'Show'}</button>
+                      </div>
+                    </React.Fragment>
                   ))}
-                  {items.length === 0 && <div style={{ fontSize: 11.5, color: 'var(--faint)', fontStyle: 'italic', padding: '10px 12px', border: '1px dashed var(--line-strong)', borderRadius: 8 }}>Drop a page here</div>}
+                  {drop && drop.cat === cat.id && drop.index === items.length && <DropLine />}
+                  {items.length === 0 && (
+                    <div onDragOver={(e) => { e.preventDefault(); setDrop({ cat: cat.id, index: 0 }) }}
+                      style={{ fontSize: 11.5, color: 'var(--faint)', fontStyle: 'italic', padding: '12px', border: '1px dashed var(--line-strong)', borderRadius: 8 }}>Drop a page here</div>
+                  )}
                 </div>
               )
             })}
