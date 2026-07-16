@@ -215,10 +215,7 @@ export function Training({ training, nudged, onNudge }) {
               <div style={{ width: 150, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
                 {done && <Status kind="ok">Complete</Status>}
                 {!done && u.overdue && !isNudged && (
-                  <>
-                    <Status kind="warn">Overdue</Status>
-                    <button className="btn btn-dark btn-sm" onClick={() => onNudge(u.name)}>Nudge</button>
-                  </>
+                  <button className="btn btn-dark btn-sm" onClick={() => onNudge(u.name)}>Nudge</button>
                 )}
                 {isNudged && <Status kind="mut" muted>Nudged ✓</Status>}
               </div>
