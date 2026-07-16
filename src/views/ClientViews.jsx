@@ -210,7 +210,7 @@ export function Training({ training, nudged, onNudge }) {
             <div key={i} className="row-hover" style={listRowStyle}>
               <Avatar name={u.name} />
               <div style={{ width: 170, fontSize: 13.5, fontWeight: 550 }}>{u.name}</div>
-              <Bar pct={u.pct} />
+              <Bar pct={u.pct} color="var(--muted)" />
               <div style={{ width: 44, fontSize: 12.5, color: 'var(--ink2)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{u.pct}%</div>
               <div style={{ width: 150, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
                 {done && <Status kind="ok">Complete</Status>}
