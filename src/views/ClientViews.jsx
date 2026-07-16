@@ -92,11 +92,11 @@ export function Tickets({ tickets, onWizard, onTicketAct }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="7" label="Open" /><Stat n="2.1d" label="Avg. age" /><Stat n="31" label="Resolved" />
       </div>
-      <Card title="Open tickets">
+      <Card>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
             <thead><tr>{['Ticket', 'Requested by', 'Priority', 'Status', '', 'Age'].map((h, i) => (
-              <th key={i} style={{ textAlign: i === 5 ? 'right' : 'left', fontSize: 12, fontWeight: 500, color: 'var(--muted)', padding: '10px 24px', borderBottom: '1px solid var(--line2)' }}>{h}</th>
+              <th key={i} style={{ textAlign: i === 5 ? 'right' : 'left', fontSize: 12, fontWeight: 500, color: 'var(--muted)', padding: '16px 28px', borderBottom: '1px solid var(--line2)' }}>{h}</th>
             ))}</tr></thead>
             <tbody>
               {tickets.map((t, i) => (
@@ -122,7 +122,7 @@ export function Tickets({ tickets, onWizard, onTicketAct }) {
     </>
   )
 }
-const cell = (bold) => ({ padding: '14px 24px', borderBottom: '1px solid var(--line2)', fontSize: 13.5, fontWeight: bold ? 550 : 400 })
+const cell = (bold) => ({ padding: '17px 28px', borderBottom: '1px solid var(--line2)', fontSize: 13.5, fontWeight: bold ? 550 : 400 })
 
 /* ---------------------------------------------------------------- People */
 export function People({ people, search, setSearch, onManage, onOnboard }) {

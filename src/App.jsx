@@ -173,10 +173,8 @@ export default function App() {
   }
 
   const logoMark = (
-    <span style={{ width: 26, height: 26, borderRadius: 7, background: '#0A0A0A', display: 'grid', placeItems: 'center', flexShrink: 0, overflow: 'hidden' }}>
-      <img src="/logomark-white.png" alt="edgefi"
-        width={26} height={26} style={{ objectFit: 'contain', display: 'block', padding: 3, boxSizing: 'border-box' }} />
-    </span>
+    <img src="/logomark-black.png" alt="edgefi"
+      width={25} height={25} style={{ objectFit: 'contain', display: 'block' }} />
   )
 
   return (

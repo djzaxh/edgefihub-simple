@@ -3,8 +3,8 @@ import { QUEUE, CUSTOMERS, INT_NAMES, FLAGS, AUDIT, firstName } from '../data.js
 import { Status, Stat, ViewHeader, Card, listRowStyle, Chip } from '../components/ui.jsx'
 import { Warn, Check } from '../icons.jsx'
 
-const cell = (bold) => ({ padding: '14px 24px', borderBottom: '1px solid var(--line2)', fontSize: 13.5, fontWeight: bold ? 550 : 400, verticalAlign: 'middle' })
-const th = (align = 'left') => ({ textAlign: align, fontSize: 12, fontWeight: 500, color: 'var(--muted)', padding: '10px 24px', borderBottom: '1px solid var(--line2)' })
+const cell = (bold) => ({ padding: '17px 28px', borderBottom: '1px solid var(--line2)', fontSize: 13.5, fontWeight: bold ? 550 : 400, verticalAlign: 'middle' })
+const th = (align = 'left') => ({ textAlign: align, fontSize: 12, fontWeight: 500, color: 'var(--muted)', padding: '16px 28px', borderBottom: '1px solid var(--line2)' })
 
 const datePill = (text) => (
   <span style={{ background: 'var(--soft)', color: 'var(--muted)', fontSize: 11.5, fontWeight: 600, padding: '5px 11px', borderRadius: 7 }}>{text}</span>
@@ -23,7 +23,7 @@ export function Queue() {
         <Stat n="3" label="Fully automated" />
         <Stat n="12" label="Clients" />
       </div>
-      <Card title="Workflows in flight">
+      <Card>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 860 }}>
             <thead><tr>
@@ -71,7 +71,7 @@ export function Customers({ onViewAs }) {
         <Stat n="1" label="Integration error" />
         <Stat n="7" label="JML workflows in flight" />
       </div>
-      <Card title="All clients">
+      <Card>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
             <thead><tr>
