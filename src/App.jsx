@@ -8,6 +8,18 @@ import { Queue, Customers, Watchtower, Audit } from './views/TechViews.jsx'
 import { KB, KBArticle, Settings } from './views/Help.jsx'
 import { Wizard, Manage, Offboard, TicketAction } from './components/Modals.jsx'
 
+// Per-role page permissions for client Modes — each role only sees what's relevant.
+//   Owner       — full access; general overview + security focus
+//   CFO         — costs/value focus; no user management (people)
+//   IT Manager  — technical ops: onboarding/offboarding, tickets, security, training; no billing
+//   HR          — simplified: just onboarding/offboarding
+const ROLE_PAGES = {
+  Owner:        ['overview', 'tickets', 'people', 'security', 'training', 'costs'],
+  CFO:          ['overview', 'tickets', 'security', 'training', 'costs'],
+  'IT Manager': ['overview', 'tickets', 'people', 'security', 'training'],
+  HR:           ['overview', 'people'],
+}
+
 const DEFAULT_CATS = [{ id: 'c1', name: 'Workspace' }, { id: 'c2', name: 'Service' }]
 const DEFAULT_ORDER = ['overview', 'tickets', 'people', 'queue', 'customers', 'remediation', 'security', 'training', 'costs', 'audit']
 const DEFAULT_CFG = {
@@ -76,11 +88,16 @@ export default function App() {
   const userName = imp ? imp.name : clientMode ? 'Jane Smith' : 'Alex Torres'
   const userFirst = firstName(userName)
 
-  const modeKeys = clientMode ? CLIENT_KEYS : TECH_KEYS
-  const effNav = nav || (clientMode ? 'overview' : 'queue')
+  // per-role page permissions: each client role only sees what's relevant to it
+  const allowedPages = clientMode ? (ROLE_PAGES[effRole] || CLIENT_KEYS) : TECH_KEYS
+  const modeKeys = allowedPages
+  const ALWAYS = ['kb', 'kbArticle', 'settings'] // help + settings reachable in any role
+  const home = clientMode ? (effRole === 'HR' ? 'people' : 'overview') : 'queue'
+  const rawNav = nav || home
+  const effNav = ALWAYS.includes(rawNav) || allowedPages.includes(rawNav) ? rawNav : home
 
-  // reset transient route bits when persona changes
-  useEffect(() => { setNav(null); setSearch('') }, [workspace, imp])
+  // reset transient route bits when persona OR role changes (a hidden page falls back)
+  useEffect(() => { setNav(null); setSearch('') }, [workspace, imp, role])
 
   const go = (k) => {
     setMobOpen(false)
@@ -91,7 +108,7 @@ export default function App() {
   }
 
   // ---- sidebar groups
-  const visible = (k) => modeKeys.includes(k) && itemCfg[k]?.show && (k !== 'costs' || costsAllowed)
+  const visible = (k) => modeKeys.includes(k) && itemCfg[k]?.show
   const groups = cats
     .map((cat) => ({ ...cat, items: itemOrder.filter((k) => visible(k) && itemCfg[k].cat === cat.id) }))
     .filter((g) => g.items.length)
@@ -261,6 +278,13 @@ function Restricted() {
 }
 
 /* -------- Demo persona switcher -------- */
+const ROLE_FOCUS = {
+  Owner: 'Full access · overview + security',
+  CFO: 'Costs & value · no user management',
+  'IT Manager': 'Technical ops · no billing',
+  HR: 'Onboarding / offboarding only',
+}
+
 function PersonaControls({ workspace, setWorkspace, role, setRole, grade, setGrade, imp, clientMode }) {
   const sel = { fontSize: 12, padding: '5px 6px', borderRadius: 7, border: '1px solid var(--line)', background: 'var(--soft2)', color: 'var(--ink2)', width: '100%' }
   return (
@@ -273,6 +297,9 @@ function PersonaControls({ workspace, setWorkspace, role, setRole, grade, setGra
         <select style={sel} value={role} onChange={(e) => setRole(e.target.value)}>
           {['Owner', 'CFO', 'IT Manager', 'HR'].map((r) => <option key={r}>{r}</option>)}
         </select>
+      )}
+      {clientMode && (
+        <div style={{ fontSize: 10.5, color: 'var(--muted)', lineHeight: 1.35 }}>{ROLE_FOCUS[imp ? imp.role : role]}</div>
       )}
       {clientMode && (
         <select style={sel} value={grade} onChange={(e) => setGrade(e.target.value)}>

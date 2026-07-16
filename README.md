@@ -19,6 +19,28 @@ flows, ticket approve/answer, nudge & reclaim actions, a Knowledge Base, and a S
 with a drag-to-reorder priority list and a sidebar organizer. Fully responsive with a mobile
 drawer under 720px.
 
+## Role permissions (client Modes)
+
+Each client role only sees the pages relevant to it (defined by `ROLE_PAGES` in `src/App.jsx`).
+Switch role live from the **Demo · view as** control in the sidebar.
+
+| Page      | Owner | CFO | IT Manager | HR |
+|-----------|:---:|:---:|:---:|:---:|
+| Overview  | ✓ | ✓ | ✓ | ✓ |
+| Tickets   | ✓ | ✓ | ✓ | — |
+| People (onboarding/offboarding) | ✓ | — | ✓ | ✓ |
+| Security  | ✓ | ✓ | ✓ | — |
+| Security Training | ✓ | ✓ | ✓ | — |
+| Costs / billing | ✓ | ✓ | — | — |
+
+- **Owner** — full access; general overview + security focus.
+- **CFO** — costs & value focus; no user management.
+- **IT Manager** — technical ops (onboarding, tickets, security, training); no billing.
+- **HR** — simplified: onboarding/offboarding only (lands on People).
+
+Navigating to a page the current role can't see falls back to its home page, so permissions
+hold even when switching roles mid-session.
+
 ## Run it
 
 ```bash
