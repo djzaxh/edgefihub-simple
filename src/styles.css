@@ -105,6 +105,7 @@ input, textarea, select, button { font-family: inherit; }
 @keyframes ringIn  { from { stroke-dashoffset: 326.7 } }
 @keyframes barIn   { from { width: 0 } }
 @keyframes loadbar { from { left: -35% } to { left: 100% } }
+@keyframes sheetUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
 
 button { transition: background .15s ease, border-color .15s ease, color .15s ease, transform .1s ease, box-shadow .15s ease; }
 button:active { transform: scale(.97); }
@@ -198,10 +199,20 @@ tbody tr:hover { background: var(--soft2); }
   .ov-grid { grid-template-columns: 1fr !important; }
 }
 /* phone: 2-up KPI stats, single-column NIST — the shell itself is the
-   dedicated mobile layout (top bar + bottom tab nav) rendered from App. */
+   dedicated mobile layout (single bottom tab bar) rendered from App. */
 @media (max-width: 720px) {
   .kpi { grid-template-columns: 1fr 1fr !important; }
   .nist-grid { grid-template-columns: 1fr !important; }
+}
+
+/* native-feeling translucent tab bar; solid fallback keeps the safe area seamless */
+.tabbar { background: var(--surface); }
+@supports ((backdrop-filter: blur(20px)) or (-webkit-backdrop-filter: blur(20px))) {
+  .tabbar {
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
 }
 
 /* modal overlay */

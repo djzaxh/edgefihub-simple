@@ -43,7 +43,7 @@ export default function App() {
     // keep the iOS status-bar / browser-chrome tint matched to the active theme
     let m = document.querySelector('meta[name="theme-color"][data-managed]')
     if (!m) { m = document.createElement('meta'); m.name = 'theme-color'; m.setAttribute('data-managed', ''); document.head.appendChild(m) }
-    m.setAttribute('content', dark ? '#121212' : '#ffffff')
+    m.setAttribute('content', dark ? '#1C1C1C' : '#F5F5F5')
   }, [dark])
 
   // ---- persona
@@ -207,27 +207,23 @@ export default function App() {
 
       {isMobile ? (
         <>
-          {/* mobile top bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'calc(env(safe-area-inset-top) + 12px) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left))', borderBottom: '1px solid var(--line)', background: 'var(--surface)', flexShrink: 0 }}>
-            {logoMark}
-            <b style={{ fontSize: 16, letterSpacing: '-0.2px', fontWeight: 500 }}>edgefi <span style={{ fontWeight: 700 }}>hub</span></b>
-            <div style={{ flex: 1 }} />
-            <button className="iconbtn" onClick={() => setDark((d) => !d)} aria-label="Toggle theme">{dark ? <Sun /> : <Moon />}</button>
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--soft)', border: '1px solid var(--line)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 600, color: 'var(--ink2)' }}>{initials(userName)}</div>
-          </div>
-
-          {/* scrollable content */}
-          <main style={{ flex: 1, minHeight: 0, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', position: 'relative', background: 'var(--bg)' }}>
+          {/* one bar only: content scrolls full-height; the view's own heading is the
+              title (iOS large-title feel), status bar cleared via safe-area inset */}
+          <main style={{ flex: 1, minHeight: 0, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', position: 'relative', background: 'var(--bg)', paddingTop: 'env(safe-area-inset-top)' }}>
             {navLoading && <div style={{ height: 2, position: 'sticky', top: 0, zIndex: 5, overflow: 'hidden' }}><div style={{ position: 'absolute', top: 0, height: '100%', width: '35%', background: 'var(--purple)', animation: 'loadbar .5s ease-out infinite' }} /></div>}
-            <div className="content" style={{ padding: '18px 16px 28px' }}>{renderView()}</div>
+            <div className="content" style={{ padding: '14px 16px 22px' }}>{renderView()}</div>
           </main>
 
-          {/* bottom tab bar */}
+          {/* the single bar — bottom tab nav, fills the home-indicator area so there's no color seam */}
           <BottomNav items={primaryTabs} effNav={effNav} onGo={go} onMore={() => setMoreOpen(true)} moreActive={moreActive} />
+
+          {/* demo persona control as a floating dot */}
+          <DemoFab dark={dark} setDark={setDark} imp={imp}
+            onExitImp={() => { setImp(null); setNav('customers') }}
+            personaProps={{ workspace, setWorkspace, role, setRole, grade, setGrade, imp, clientMode }} />
+
           {moreOpen && (
-            <MoreSheet moreItems={moreItems} effNav={effNav} onGo={go} onClose={() => setMoreOpen(false)}
-              dark={dark} setDark={setDark} imp={imp} onExitImp={() => { setImp(null); setNav('customers'); setMoreOpen(false) }}
-              personaProps={{ workspace, setWorkspace, role, setRole, grade, setGrade, imp, clientMode }} />
+            <MoreSheet moreItems={moreItems} effNav={effNav} onGo={go} onClose={() => setMoreOpen(false)} userName={userName} dark={dark} setDark={setDark} />
           )}
         </>
       ) : (
@@ -313,32 +309,60 @@ function Restricted() {
   return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>This section is available to Owner and CFO roles.</div>
 }
 
-/* -------- Mobile bottom tab bar -------- */
+/* -------- Mobile bottom tab bar (the single bar) -------- */
 function BottomNav({ items, effNav, onGo, onMore, moreActive }) {
-  const tab = (active) => ({ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '9px 4px 8px', minHeight: 56, background: 'none', border: 'none', cursor: 'pointer', color: active ? 'var(--ink)' : 'var(--faint)' })
+  const tab = (active) => ({ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '9px 4px 7px', minHeight: 54, background: 'none', border: 'none', cursor: 'pointer', color: active ? 'var(--ink)' : 'var(--faint)', minWidth: 0 })
+  const label = (active) => ({ fontSize: 10.5, fontWeight: active ? 600 : 500, letterSpacing: '.01em' })
   return (
-    <nav style={{ display: 'flex', borderTop: '1px solid var(--line)', background: 'var(--surface)', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    // .tabbar handles the translucent blur; padding-bottom fills the home-indicator
+    // area with the SAME surface so there's no color seam under the bar
+    <nav className="tabbar" style={{ display: 'flex', borderTop: '1px solid var(--line)', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' }}>
       {items.map((k) => {
         const Icon = NAV_ICONS[k] || Home
         const active = effNav === k
         return (
           <button key={k} style={tab(active)} onClick={() => onGo(k)} aria-label={NAV_SHORT[k]}>
             <Icon size={21} />
-            <span style={{ fontSize: 10.5, fontWeight: active ? 600 : 500 }}>{NAV_SHORT[k]}</span>
+            <span style={label(active)}>{NAV_SHORT[k]}</span>
           </button>
         )
       })}
       <button style={tab(moreActive)} onClick={onMore} aria-label="More">
         <Dots size={21} />
-        <span style={{ fontSize: 10.5, fontWeight: moreActive ? 600 : 500 }}>More</span>
+        <span style={label(moreActive)}>More</span>
       </button>
     </nav>
   )
 }
 
-/* -------- Mobile "More" bottom sheet (secondary nav + settings + demo) -------- */
-function MoreSheet({ moreItems, effNav, onGo, onClose, dark, setDark, imp, onExitImp, personaProps }) {
-  const rowStyle = (active) => ({ display: 'flex', alignItems: 'center', gap: 13, width: '100%', padding: '14px 6px', background: 'none', border: 'none', borderBottom: '1px solid var(--line2)', cursor: 'pointer', color: 'var(--ink)', fontSize: 14, fontWeight: 500, textAlign: 'left' })
+/* -------- Demo persona control as a floating dot -------- */
+function DemoFab({ dark, setDark, imp, onExitImp, personaProps }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      {open && <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 96 }} />}
+      <div style={{ position: 'fixed', right: 16, bottom: 'calc(env(safe-area-inset-bottom) + 72px)', zIndex: 97, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12 }}>
+        {open && (
+          <div style={{ width: 232, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, boxShadow: '0 16px 44px rgba(10,10,10,.28)', padding: '14px 16px', animation: 'rise .2s cubic-bezier(.2,.8,.2,1) both' }}>
+            <PersonaControls {...personaProps} />
+            {imp && (
+              <button onClick={() => { onExitImp(); setOpen(false) }} style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} className="btn btn-dark btn-sm">Exit “view as”</button>
+            )}
+          </div>
+        )}
+        <button onClick={() => setOpen((o) => !o)} aria-label="Demo controls"
+          style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--ink)', color: 'var(--surface)', border: 'none', boxShadow: '0 6px 20px rgba(10,10,10,.3)', display: 'grid', placeItems: 'center', cursor: 'pointer', position: 'relative' }}>
+          <Eye size={18} />
+          <span style={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', background: 'var(--purple)', border: '2px solid var(--ink)' }} />
+        </button>
+      </div>
+    </>
+  )
+}
+
+/* -------- Mobile "More" bottom sheet (overflow pages + settings + help + theme) -------- */
+function MoreSheet({ moreItems, effNav, onGo, onClose, userName, dark, setDark }) {
+  const rowStyle = (active) => ({ display: 'flex', alignItems: 'center', gap: 13, width: '100%', padding: '15px 6px', background: 'none', border: 'none', borderBottom: '1px solid var(--line2)', cursor: 'pointer', color: 'var(--ink)', fontSize: 14.5, fontWeight: 500, textAlign: 'left' })
   const item = (label, Icon, onClick, active) => (
     <button onClick={onClick} style={rowStyle(active)}>
       <span style={{ color: active ? 'var(--ink)' : 'var(--faint)', display: 'grid' }}><Icon size={20} /></span>
@@ -347,23 +371,20 @@ function MoreSheet({ moreItems, effNav, onGo, onClose, dark, setDark, imp, onExi
     </button>
   )
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 120, background: 'rgba(10,10,10,.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', animation: 'fade .2s ease both' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', background: 'var(--surface)', borderRadius: '16px 16px 0 0', padding: '10px 18px calc(18px + env(safe-area-inset-bottom))', maxHeight: '82vh', overflowY: 'auto', animation: 'rise .26s cubic-bezier(.2,.8,.2,1) both' }}>
-        <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--line-strong)', margin: '4px auto 12px' }} />
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 120, background: 'rgba(10,10,10,.4)', display: 'flex', alignItems: 'flex-end', animation: 'fade .18s ease both' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '10px 20px calc(16px + env(safe-area-inset-bottom))', maxHeight: '82vh', overflowY: 'auto', boxShadow: '0 -8px 40px rgba(10,10,10,.18)', animation: 'sheetUp .28s cubic-bezier(.16,1,.3,1) both' }}>
+        <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--line-strong)', margin: '4px auto 14px' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '4px 6px 14px' }}>
+          <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--soft)', border: '1px solid var(--line)', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 600, color: 'var(--ink2)' }}>{initials(userName)}</div>
+          <div style={{ fontSize: 15, fontWeight: 600 }}>{userName}</div>
+        </div>
         {moreItems.map((k) => item(NAV[k], NAV_ICONS[k] || Home, () => onGo(k), effNav === k))}
         {item('Settings', Gear, () => onGo('settings'), effNav === 'settings')}
         {item('Help center', HelpIcon, () => onGo('kb'), effNav === 'kb' || effNav === 'kbArticle')}
-        <button onClick={() => setDark((d) => !d)} style={rowStyle(false)}>
+        <button onClick={() => setDark((d) => !d)} style={{ ...rowStyle(false), borderBottom: 'none' }}>
           <span style={{ color: 'var(--faint)', display: 'grid' }}>{dark ? <Sun size={20} /> : <Moon size={20} />}</span>
           <span style={{ flex: 1 }}>{dark ? 'Light mode' : 'Dark mode'}</span>
         </button>
-        {imp && (
-          <button onClick={onExitImp} style={{ ...rowStyle(false), color: 'var(--purple)' }}>
-            <span style={{ color: 'var(--purple)', display: 'grid' }}><Eye size={20} /></span>
-            <span style={{ flex: 1 }}>Exit “view as”</span>
-          </button>
-        )}
-        <div style={{ marginTop: 8 }}><PersonaControls {...personaProps} /></div>
       </div>
     </div>
   )
