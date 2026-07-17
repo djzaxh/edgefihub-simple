@@ -58,8 +58,8 @@ export function KBArticle({ article, onBack, onWizard, toast }) {
       <div style={{ height: 180, borderRadius: 12, background: 'var(--soft)', display: 'grid', placeItems: 'center', color: 'var(--faint)', margin: '20px 0' }}><Image /></div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, borderTop: '1px solid var(--line)', paddingTop: 18, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 13, color: 'var(--ink2)' }}>Was this helpful?</span>
-        <button className={vote === 'yes' ? 'btn btn-dark btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => setVote('yes')}>Yes</button>
-        <button className={vote === 'no' ? 'btn btn-dark btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => { setVote('no'); toast("Thanks — we'll improve this article") }}>No</button>
+        <button className={vote === 'yes' ? 'btn btn-dark btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => { setVote('yes'); toast('Thanks for the feedback') }}>Yes</button>
+        <button className={vote === 'no' ? 'btn btn-dark btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => { setVote('no'); toast("Thanks — we'll improve this article", 'info') }}>No</button>
         <button className="btn btn-dark btn-sm" style={{ marginLeft: 'auto' }} onClick={onWizard}>Still stuck? Ask for help</button>
       </div>
     </div>
@@ -109,7 +109,7 @@ export function Settings({ clientMode, prios, setPrios, cats, setCats, itemCfg, 
     Object.keys(nextCfg).forEach((k) => { if (nextCfg[k].cat === id) nextCfg[k] = { ...nextCfg[k], cat: fallback } })
     setItemCfg(nextCfg)
     setCats(cats.filter((c) => c.id !== id))
-    toast('Section removed — pages moved')
+    toast('Section removed — pages moved', 'warn')
   }
   const toggleShow = (k) => setItemCfg({ ...itemCfg, [k]: { ...itemCfg[k], show: !itemCfg[k].show } })
 

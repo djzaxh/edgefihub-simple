@@ -19,12 +19,16 @@ body {
   --purple: #6501E5;
   --purple-deep: #4D02AE;
   --purple-soft: #ECE3FC;
+  --purple-line: #D4C2F6;
   --ok: #177A4C;
   --ok-bg: #EAF6EF;
+  --ok-line: #B7E0C6;
   --warn: #8A5A00;
   --warn-bg: #FBF3E3;
+  --warn-line: #EBD59B;
   --danger: #B42318;
   --danger-bg: #FBEAE8;
+  --danger-line: #F0C2BB;
   --edge: #0B6A87;
   --edge-bg: #E9F4F8;
   --lime: #C4F63A;
@@ -46,12 +50,16 @@ body.dark {
   --purple: #8D4DF5;
   --purple-deep: #C9ABFF;
   --purple-soft: rgba(101, 1, 229, 0.30);
+  --purple-line: rgba(141, 77, 245, 0.45);
   --ok: #4CC38A;
   --ok-bg: rgba(76, 195, 138, 0.14);
+  --ok-line: rgba(76, 195, 138, 0.38);
   --warn: #E3B341;
   --warn-bg: rgba(227, 179, 65, 0.13);
+  --warn-line: rgba(227, 179, 65, 0.4);
   --danger: #F26D5F;
   --danger-bg: rgba(242, 109, 95, 0.13);
+  --danger-line: rgba(242, 109, 95, 0.4);
   --edge: #64C2E0;
   --edge-bg: rgba(100, 194, 224, 0.13);
   color-scheme: dark;
@@ -70,6 +78,18 @@ body {
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
   transition: background .25s ease, color .25s ease;
+  /* iOS/native feel: no tap flash, no auto text zoom, no rubber-band reveal */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+/* App shell fills the *visible* viewport. 100dvh tracks Safari's shrinking/growing
+   chrome so the bottom tab bar is never hidden behind the toolbar or home bar. */
+.app-root {
+  height: 100vh;                 /* fallback */
+  height: 100dvh;
 }
 
 a { color: var(--ink); text-decoration: none; }

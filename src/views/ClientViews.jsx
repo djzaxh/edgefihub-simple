@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import {
   HERO, CHART, CHART_LABELS, NIST, LICENSES, ACTIVITY, SEC_ACTIVITY, PILL,
 } from '../data.js'
-import { Pill, Status, Stat, Avatar, ViewHeader, Card, GradeRing, Bar, ActivityFeed, listRowStyle, mobileCardStyle, useIsMobile } from '../components/ui.jsx'
+import { Pill, Status, Stat, Avatar, ViewHeader, Card, GradeRing, Meter, ActivityFeed, listRowStyle, mobileCardStyle, useIsMobile } from '../components/ui.jsx'
 import { Search } from '../icons.jsx'
 
 /* ---------------------------------------------------------------- Overview */
@@ -91,7 +91,7 @@ export function Tickets({ tickets, onWizard, onTicketAct }) {
         <button className="btn btn-dark" onClick={onWizard}>Request service</button>
       </ViewHeader>
       <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
-        <Stat n="7" label="Open" /><Stat n="2.1d" label="Avg. age" /><Stat n="31" label="Resolved" />
+        <Stat n="7" label="Open" /><Stat n="2.1d" label="Avg. age" /><Stat n="31" label="Resolved" color="var(--ok)" />
       </div>
 
       {isMobile ? (
@@ -206,7 +206,7 @@ export function Security({ grade, gradePct, onExport }) {
           <div key={i} className="card" style={{ padding: 16 }}>
             <div style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--faint)' }}>{w.name}</div>
             <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-.5px', marginTop: 6, fontVariantNumeric: 'tabular-nums' }}>{w.score}</div>
-            <div style={{ marginTop: 10 }}><Bar pct={w.score} height={4} /></div>
+            <div style={{ marginTop: 10 }}><Meter pct={w.score} height={4} /></div>
             <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 9, lineHeight: 1.45 }}>{w.note}</div>
           </div>
         ))}
@@ -225,8 +225,8 @@ export function Training({ training, nudged, onNudge }) {
     <>
       <ViewHeader title="Security Training" />
       <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
-        <Stat n="84%" label="Overall completion" />
-        <Stat n="3" label="Overdue" />
+        <Stat n="84%" label="Overall completion" color="var(--ok)" />
+        <Stat n="3" label="Overdue" color="var(--warn)" />
         <Stat n="12" label="Modules assigned" />
       </div>
       <Card title="People">
@@ -249,7 +249,7 @@ export function Training({ training, nudged, onNudge }) {
                 <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 550 }}>{u.name}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{rightZone}</div>
                 <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <Bar pct={u.pct} color="var(--muted)" />
+                  <Meter pct={u.pct} />
                   <div style={{ width: 40, fontSize: 12.5, color: 'var(--ink2)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{u.pct}%</div>
                 </div>
               </div>
@@ -259,7 +259,7 @@ export function Training({ training, nudged, onNudge }) {
             <div key={i} className="row-hover" style={listRowStyle}>
               <Avatar name={u.name} />
               <div style={{ width: 170, fontSize: 13.5, fontWeight: 550 }}>{u.name}</div>
-              <Bar pct={u.pct} color="var(--muted)" />
+              <Meter pct={u.pct} />
               <div style={{ width: 44, fontSize: 12.5, color: 'var(--ink2)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{u.pct}%</div>
               <div style={{ width: 150, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
                 {rightZone}
@@ -286,7 +286,7 @@ export function Costs({ reclaimed, onReclaim, onReclaimAll }) {
       <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="$4,820" label="IT costs / mo" />
         <Stat n="$104" label="Per person / mo" />
-        <Stat n={idleTotal} label="Idle licenses" />
+        <Stat n={idleTotal} label="Idle licenses" color={idleTotal > 0 ? 'var(--warn)' : undefined} />
       </div>
       <Card title="Licenses by title" right={idleTotal > 0 ? <button className="btn btn-dark btn-sm" onClick={onReclaimAll}>Reclaim {idleTotal}</button> : null}>
         {rows.map((l, i) => {
@@ -296,7 +296,7 @@ export function Costs({ reclaimed, onReclaim, onReclaimAll }) {
                 <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 550 }}>{l.title}</div>
                 <div style={{ fontSize: 12.5, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{l.cost}/mo</div>
                 <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Bar pct={Math.round(l.used / l.total * 100)} />
+                  <Meter pct={Math.round(l.used / l.total * 100)} />
                   <div style={{ fontSize: 12, color: 'var(--ink2)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{l.used}/{l.total}</div>
                   {reclaimBtn(l)}
                 </div>
@@ -306,7 +306,7 @@ export function Costs({ reclaimed, onReclaim, onReclaimAll }) {
           return (
             <div key={i} className="row-hover" style={listRowStyle}>
               <div style={{ width: 220, fontSize: 13.5, fontWeight: 550 }}>{l.title}</div>
-              <Bar pct={Math.round(l.used / l.total * 100)} />
+              <Meter pct={Math.round(l.used / l.total * 100)} />
               <div style={{ width: 70, fontSize: 12.5, color: 'var(--ink2)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{l.used} / {l.total}</div>
               <div style={{ width: 64, fontSize: 12.5, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{l.cost}</div>
               <div style={{ width: 112, display: 'flex', justifyContent: 'flex-end' }}>{reclaimBtn(l)}</div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { PILL, initials as toInitials, RING_C } from '../data.js'
+import { PILL, scoreTone, initials as toInitials, RING_C } from '../data.js'
 
 // True when the viewport is phone-sized. Drives the dedicated mobile layout.
 export function useIsMobile(bp = 720) {
@@ -14,11 +14,12 @@ export function useIsMobile(bp = 720) {
   return m
 }
 
-// Neutral tag chip — used sparingly for standalone callouts (not per-row).
+// Status tag chip — used sparingly for standalone callouts (not per-row). Carries a
+// semantic tint + matching colored border (green/amber/red/purple); 'mut' stays neutral.
 export function Pill({ kind = 'mut', children }) {
   const p = PILL[kind] || PILL.mut
   return (
-    <span className="pill" style={{ background: 'var(--soft)', color: 'var(--ink2)' }}>
+    <span className="pill" style={{ background: p.bg, color: p.fg, border: `1px solid ${p.line}` }}>
       <span className="dot" style={{ background: p.dot, animation: p.pulse ? 'pulse 1.4s infinite' : 'none' }} />
       {children}
     </span>
@@ -99,13 +100,23 @@ export function GradeRing({ grade, pct, size = 132, stroke = 9, fontSize = 32 })
   )
 }
 
-// A thin progress/usage bar.
+// A thin progress/usage bar — the dumb primitive. Fill color is passed in.
 export function Bar({ pct, color = 'var(--ink)', height = 6 }) {
   return (
     <div style={{ flex: 1, height, borderRadius: 3, background: 'var(--line2)', overflow: 'hidden' }}>
       <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 3, animation: 'barIn .9s cubic-bezier(.2,.8,.2,1) both' }} />
     </div>
   )
+}
+
+// Semantic health meter — the shared bar used everywhere (security, training, costs).
+// Fill color comes from the same tone table as chips/statuses. `tone` may be an explicit
+// key ('ok'|'warn'|'err'|'brand'|'neutral'); when omitted it derives from pct (higher = healthier).
+const METER_FILL = { brand: 'var(--purple)', neutral: 'var(--muted)' }
+export function Meter({ pct, tone, height = 6 }) {
+  const key = tone || scoreTone(pct)
+  const color = METER_FILL[key] || PILL[key]?.dot || 'var(--ink)'
+  return <Bar pct={pct} color={color} height={height} />
 }
 
 export const listRowStyle = {

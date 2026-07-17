@@ -40,6 +40,10 @@ export default function App() {
   useEffect(() => {
     document.body.classList.toggle('dark', dark)
     localStorage.setItem('edgehub-theme', dark ? 'dark' : 'light')
+    // keep the iOS status-bar / browser-chrome tint matched to the active theme
+    let m = document.querySelector('meta[name="theme-color"][data-managed]')
+    if (!m) { m = document.createElement('meta'); m.name = 'theme-color'; m.setAttribute('data-managed', ''); document.head.appendChild(m) }
+    m.setAttribute('content', dark ? '#121212' : '#ffffff')
   }, [dark])
 
   // ---- persona
@@ -76,13 +80,13 @@ export default function App() {
   const isMobile = useIsMobile()
   const [moreOpen, setMoreOpen] = useState(false)
 
-  // ---- toast
-  const [toastMsg, setToastMsg] = useState('')
+  // ---- toast — type drives a single accent glyph on the ink surface
+  const [toastMsg, setToastMsg] = useState(null) // { m, type } | null
   const toastTimer = useRef(null)
-  const toast = (m) => {
-    setToastMsg(m)
+  const toast = (m, type = 'success') => {
+    setToastMsg({ m, type })
     clearTimeout(toastTimer.current)
-    toastTimer.current = setTimeout(() => setToastMsg(''), 3200)
+    toastTimer.current = setTimeout(() => setToastMsg(null), 3200)
   }
 
   // ---- derived persona
@@ -129,7 +133,7 @@ export default function App() {
     const map = { approve: ['Approved', 'prov'], decline: ['Declined', 'err'], answer: ['Answered', 'prov'] }
     const [status, sk] = map[mode]
     setTickets((prev) => prev.map((x) => (x.name === t.name ? { ...x, status, sk, acted: true } : x)))
-    toast(mode === 'answer' ? 'Reply sent to edgefi' : `${status} — ${t.name}`)
+    toast(mode === 'answer' ? 'Reply sent to edgefi' : `${status} — ${t.name}`, mode === 'decline' ? 'warn' : 'success')
     setTicketAct(null)
   }
   const submitWizard = ({ name, pri }) => {
@@ -147,7 +151,7 @@ export default function App() {
   }
   const confirmOffboard = () => {
     setPeople((prev) => prev.map((p) => (p.name === offboard ? { ...p, status: 'Offboarding', sk: 'prov' } : p)))
-    toast(`Offboarding started for ${offboard}`)
+    toast(`Offboarding started for ${offboard}`, 'warn')
     setOffboard(null)
   }
 
@@ -155,7 +159,7 @@ export default function App() {
   const reclaim = (title, n) => { setReclaimed((r) => [...r, title]); toast(`Reclaiming ${n} seat(s) — ${title.split(' ')[0]}`) }
   const reclaimAll = () => {
     const idleTitles = LICENSES.filter((l) => l.total > l.used && !reclaimed.includes(l.title)).map((l) => l.title)
-    if (!idleTitles.length) return toast('No idle seats to reclaim')
+    if (!idleTitles.length) return toast('No idle seats to reclaim', 'info')
     setReclaimed((r) => [...new Set([...r, ...idleTitles])])
     toast('Reclaiming all idle seats')
   }
@@ -188,7 +192,7 @@ export default function App() {
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', maxWidth: '100vw', overflow: 'hidden' }}>
+    <div className="app-root" style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100vw', overflow: 'hidden' }}>
       {/* impersonation banner */}
       {imp && (
         <div style={{ position: 'sticky', top: 0, zIndex: 60, background: 'var(--purple-soft)', borderBottom: '1px solid var(--purple-soft)', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -204,7 +208,7 @@ export default function App() {
       {isMobile ? (
         <>
           {/* mobile top bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--line)', background: 'var(--surface)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'calc(env(safe-area-inset-top) + 12px) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left))', borderBottom: '1px solid var(--line)', background: 'var(--surface)', flexShrink: 0 }}>
             {logoMark}
             <b style={{ fontSize: 16, letterSpacing: '-0.2px', fontWeight: 500 }}>edgefi <span style={{ fontWeight: 700 }}>hub</span></b>
             <div style={{ flex: 1 }} />
@@ -286,12 +290,20 @@ export default function App() {
       {offboard && <Offboard name={offboard} onClose={() => setOffboard(null)} onConfirm={confirmOffboard} />}
       {ticketAct && <TicketAction ticket={ticketAct} onClose={() => setTicketAct(null)} onResolve={resolveTicket} />}
 
-      {/* toast */}
-      {toastMsg && (
-        <div style={{ position: 'fixed', bottom: isMobile ? 82 : 24, left: '50%', transform: 'translateX(-50%)', zIndex: 200, background: 'var(--ink)', color: 'var(--surface)', borderRadius: 10, padding: '11px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 9, boxShadow: '0 8px 30px rgba(10,10,10,.25)', animation: 'rise .25s cubic-bezier(.2,.8,.2,1) both', maxWidth: 'calc(100vw - 32px)' }}>
-          <span style={{ color: 'var(--lime)', display: 'grid' }}><Check size={14} sw={3} /></span>{toastMsg}
-        </div>
-      )}
+      {/* toast — ink surface with one semantic accent glyph (bright hues legible on black) */}
+      {toastMsg && (() => {
+        const TT = {
+          success: { color: 'var(--lime)', icon: <Check size={14} sw={3} /> },
+          warn:    { color: '#F5B544',     icon: <Warn size={15} sw={2.4} /> },
+          err:     { color: '#F87A6E',     icon: <Warn size={15} sw={2.4} /> },
+          info:    { color: '#B3B3B3',     icon: <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor', display: 'block' }} /> },
+        }[toastMsg.type] || { color: 'var(--lime)', icon: <Check size={14} sw={3} /> }
+        return (
+          <div style={{ position: 'fixed', bottom: isMobile ? 'calc(env(safe-area-inset-bottom) + 90px)' : 24, left: '50%', transform: 'translateX(-50%)', zIndex: 200, background: 'var(--ink)', color: 'var(--surface)', borderRadius: 10, padding: '11px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 9, boxShadow: '0 8px 30px rgba(10,10,10,.25)', animation: 'rise .25s cubic-bezier(.2,.8,.2,1) both', maxWidth: 'calc(100vw - 32px)' }}>
+            <span style={{ color: TT.color, display: 'grid' }}>{TT.icon}</span>{toastMsg.m}
+          </div>
+        )
+      })()}
     </div>
   )
 }

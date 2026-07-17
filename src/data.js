@@ -4,13 +4,19 @@
 // ===========================================================================
 
 // --- pill color kinds -> {fg, bg, pulse} --------------------------------------
+// Single source of truth for semantic tone -> color. Consumed by Pill, Status,
+// and Meter so chips, inline statuses, and bars all speak the same color language.
 export const PILL = {
-  ok:   { fg: 'var(--ok)',     bg: 'var(--ok-bg)',     dot: 'var(--ok)',     pulse: false },
-  warn: { fg: 'var(--warn)',   bg: 'var(--warn-bg)',   dot: 'var(--warn)',   pulse: false },
-  err:  { fg: 'var(--danger)', bg: 'var(--danger-bg)', dot: 'var(--danger)', pulse: false },
-  mut:  { fg: 'var(--muted)',  bg: 'var(--soft)',      dot: 'var(--faint)',  pulse: false },
-  prov: { fg: 'var(--purple)', bg: 'var(--purple-soft)', dot: 'var(--purple)', pulse: true },
+  ok:   { fg: 'var(--ok)',     bg: 'var(--ok-bg)',     dot: 'var(--ok)',     line: 'var(--ok-line)',     pulse: false },
+  warn: { fg: 'var(--warn)',   bg: 'var(--warn-bg)',   dot: 'var(--warn)',   line: 'var(--warn-line)',   pulse: false },
+  err:  { fg: 'var(--danger)', bg: 'var(--danger-bg)', dot: 'var(--danger)', line: 'var(--danger-line)', pulse: false },
+  mut:  { fg: 'var(--muted)',  bg: 'var(--soft)',      dot: 'var(--faint)',  line: 'var(--line-strong)', pulse: false },
+  prov: { fg: 'var(--purple)', bg: 'var(--purple-soft)', dot: 'var(--purple)', line: 'var(--purple-line)', pulse: true },
 }
+
+// Map a 0–100 health score to a semantic tone (higher = healthier). Used by Meter
+// so every progress bar across the app colors consistently.
+export const scoreTone = (pct) => (pct >= 80 ? 'ok' : pct >= 50 ? 'warn' : 'err')
 
 export const initials = (name) =>
   name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
