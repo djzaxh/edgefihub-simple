@@ -20,8 +20,8 @@ export function Queue() {
       <ViewHeader title="JML queue">{datePill('Tuesday, Jul 15')}</ViewHeader>
       <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n={open} label="In flight" />
-        <Stat n={blocked} label="Blocked" color={blocked > 0 ? 'var(--warn)' : undefined} />
-        <Stat n="3" label="Fully automated" color="var(--purple)" />
+        <Stat n={blocked} label="Blocked" />
+        <Stat n="3" label="Fully automated" />
         <Stat n="12" label="Clients" />
       </div>
       {isMobile ? (
@@ -91,7 +91,7 @@ export function Customers({ onViewAs }) {
       <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="12" label="Active clients" />
         <Stat n="438" label="Users under management" />
-        <Stat n="1" label="Integration error" color="var(--danger)" />
+        <Stat n="1" label="Integration error" />
         <Stat n="7" label="JML workflows in flight" />
       </div>
       {isMobile ? (
@@ -161,10 +161,10 @@ export function Watchtower({ onFlag }) {
     <>
       <ViewHeader title="Watchtower">{datePill('4 open across 12 clients')}</ViewHeader>
       <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
-        <Stat n="2" label="Devices unpatched" color="var(--warn)" />
-        <Stat n="3" label="Training overdue" color="var(--warn)" />
-        <Stat n="2" label="MFA gaps" color="var(--warn)" />
-        <Stat n="1" label="Integration error" color="var(--danger)" />
+        <Stat n="2" label="Devices unpatched" />
+        <Stat n="3" label="Training overdue" />
+        <Stat n="2" label="MFA gaps" />
+        <Stat n="1" label="Integration error" />
       </div>
       <Card title="Flagged items">
         {FLAGS.map((f, i) => (
@@ -184,10 +184,11 @@ export function Watchtower({ onFlag }) {
 
 /* ---------------------------------------------------------------- Audit log */
 export function Audit({ onExport }) {
+  const isMobile = useIsMobile()
   return (
     <>
       <ViewHeader title="Audit log">
-        <button className="btn btn-ghost" onClick={onExport}>Export</button>
+        {!isMobile && <button className="btn btn-ghost" onClick={onExport}>Export</button>}
       </ViewHeader>
       <Card title="All admin activity">
         {AUDIT.map((a, i) => (

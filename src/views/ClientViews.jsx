@@ -91,7 +91,7 @@ export function Tickets({ tickets, onWizard, onTicketAct }) {
         <button className="btn btn-dark" onClick={onWizard}>Request service</button>
       </ViewHeader>
       <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
-        <Stat n="7" label="Open" /><Stat n="2.1d" label="Avg. age" /><Stat n="31" label="Resolved" color="var(--ok)" />
+        <Stat n="7" label="Open" /><Stat n="2.1d" label="Avg. age" /><Stat n="31" label="Resolved" />
       </div>
 
       {isMobile ? (
@@ -181,6 +181,7 @@ export function People({ people, search, setSearch, onManage, onOnboard }) {
 
 /* ---------------------------------------------------------------- Security */
 export function Security({ grade, gradePct, onExport }) {
+  const isMobile = useIsMobile()
   // one indicator chip only — highest priority wins (warn > prov here)
   const topChip = pickTopChip([
     { kind: 'warn', label: 'MFA · 2 accounts' },
@@ -190,7 +191,7 @@ export function Security({ grade, gradePct, onExport }) {
   return (
     <>
       <ViewHeader title="Security">
-        <button className="btn btn-ghost" onClick={onExport}>Export report</button>
+        {!isMobile && <button className="btn btn-ghost" onClick={onExport}>Export report</button>}
       </ViewHeader>
       <Card style={{ marginBottom: 18 }}>
         <div style={{ padding: 22, display: 'flex', gap: 28, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -228,8 +229,8 @@ export function Training({ training, nudged, onNudge }) {
     <>
       <ViewHeader title="Security Training" />
       <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
-        <Stat n="84%" label="Overall completion" color="var(--ok)" />
-        <Stat n="3" label="Overdue" color="var(--warn)" />
+        <Stat n="84%" label="Overall completion" />
+        <Stat n="3" label="Overdue" />
         <Stat n="12" label="Modules assigned" />
       </div>
       <Card title="People">
@@ -289,7 +290,7 @@ export function Costs({ reclaimed, onReclaim, onReclaimAll }) {
       <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="$4,820" label="IT costs / mo" />
         <Stat n="$104" label="Per person / mo" />
-        <Stat n={idleTotal} label="Idle licenses" color={idleTotal > 0 ? 'var(--warn)' : undefined} />
+        <Stat n={idleTotal} label="Idle licenses" />
       </div>
       <Card title="Licenses by title" right={idleTotal > 0 ? <button className="btn btn-dark btn-sm" onClick={onReclaimAll}>Reclaim {idleTotal}</button> : null}>
         {rows.map((l, i) => {
