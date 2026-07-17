@@ -2,8 +2,12 @@ import React, { useState } from 'react'
 import {
   HERO, CHART, CHART_LABELS, NIST, LICENSES, ACTIVITY, SEC_ACTIVITY, PILL,
 } from '../data.js'
-import { Pill, Status, Stat, Avatar, ViewHeader, Card, GradeRing, Meter, ActivityFeed, listRowStyle, mobileCardStyle, useIsMobile, pickTopChip } from '../components/ui.jsx'
+import { Pill, Status, Stat, Avatar, ViewHeader, Card, GradeRing, Meter, ActivityFeed, listRowStyle, useIsMobile, pickTopChip } from '../components/ui.jsx'
+import RecordCard from '../components/RecordCard.jsx'
 import { Search } from '../icons.jsx'
+
+// ticket status kind -> RecordCard tone
+const TICKET_TONE = { prov: 'progress', warn: 'warning', mut: 'neutral', ok: 'success', err: 'danger' }
 
 /* ---------------------------------------------------------------- Overview */
 export function Overview({ userFirst, grade, gradePct, prios, costsAllowed, tickets, onWizard, onTicketAct }) {
@@ -95,21 +99,18 @@ export function Tickets({ tickets, onWizard, onTicketAct }) {
       </div>
 
       {isMobile ? (
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {tickets.map((t, i) => (
-            <div key={i} style={mobileCardStyle}>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{t.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{t.by} · {t.age}</div>
-                </div>
-                {t.act && !t.acted && <button className="btn btn-dark btn-sm" style={{ flexShrink: 0 }} onClick={() => onTicketAct(t)}>{t.act === 'approve' ? 'Approve' : 'Answer'}</button>}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <Status kind={t.sk}>{t.status}</Status>
-                <span style={{ fontSize: 12, color: t.pk === 'warn' ? 'var(--ink2)' : 'var(--muted)' }}>{t.pri} priority</span>
-              </div>
-            </div>
+            <RecordCard key={i}
+              title={t.name}
+              subtitle={`${t.by} · ${t.age}`}
+              status={t.status}
+              tone={TICKET_TONE[t.sk] || 'progress'}
+              meta={`${t.pri} priority`}
+              actionLabel={t.act ? (t.act === 'approve' ? 'Approve' : 'Answer') : null}
+              showAction={!!t.act && !t.acted}
+              onAction={() => onTicketAct(t)}
+            />
           ))}
         </div>
       ) : (
