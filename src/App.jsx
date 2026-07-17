@@ -379,7 +379,8 @@ function MoreSheet({ moreItems, effNav, onGo, onClose, userName, dark, setDark }
           <div style={{ fontSize: 15, fontWeight: 600 }}>{userName}</div>
         </div>
         {moreItems.map((k) => item(NAV[k], NAV_ICONS[k] || Home, () => onGo(k), effNav === k))}
-        {item('Settings', Gear, () => onGo('settings'), effNav === 'settings')}
+        {/* Settings is desktop-only — its only content is sidebar organization, which
+            doesn't apply on mobile (no sidebar). */}
         {item('Help center', HelpIcon, () => onGo('kb'), effNav === 'kb' || effNav === 'kbArticle')}
         <button onClick={() => setDark((d) => !d)} style={{ ...rowStyle(false), borderBottom: 'none' }}>
           <span style={{ color: 'var(--faint)', display: 'grid' }}>{dark ? <Sun size={20} /> : <Moon size={20} />}</span>
