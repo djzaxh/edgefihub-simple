@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import {
   HERO, CHART, CHART_LABELS, NIST, LICENSES, ACTIVITY, SEC_ACTIVITY, PILL,
 } from '../data.js'
-import { Pill, Status, Stat, Avatar, ViewHeader, Card, GradeRing, Bar, ActivityFeed, listRowStyle } from '../components/ui.jsx'
+import { Pill, Status, Stat, Avatar, ViewHeader, Card, GradeRing, Bar, ActivityFeed, listRowStyle, mobileCardStyle, useIsMobile } from '../components/ui.jsx'
 import { Search } from '../icons.jsx'
 
 /* ---------------------------------------------------------------- Overview */
@@ -21,7 +21,7 @@ export function Overview({ userFirst, grade, gradePct, prios, costsAllowed, tick
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '4px 0 26px', animation: 'slideUp .3s ease both' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0 26px', flexWrap: 'wrap', animation: 'slideUp .3s ease both' }}>
         <h1 className="h1" style={{ fontSize: 24 }}>Welcome, {userFirst}</h1>
         <button className="btn btn-dark" style={{ marginLeft: 'auto' }} onClick={onWizard}>Ask for Help</button>
       </div>
@@ -84,14 +84,35 @@ export function Overview({ userFirst, grade, gradePct, prios, costsAllowed, tick
 
 /* ---------------------------------------------------------------- Tickets */
 export function Tickets({ tickets, onWizard, onTicketAct }) {
+  const isMobile = useIsMobile()
   return (
     <>
       <ViewHeader title="Tickets">
         <button className="btn btn-dark" onClick={onWizard}>Request service</button>
       </ViewHeader>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
+      <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="7" label="Open" /><Stat n="2.1d" label="Avg. age" /><Stat n="31" label="Resolved" />
       </div>
+
+      {isMobile ? (
+        <div>
+          {tickets.map((t, i) => (
+            <div key={i} style={mobileCardStyle}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{t.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{t.by} · {t.age}</div>
+                </div>
+                {t.act && !t.acted && <button className="btn btn-dark btn-sm" style={{ flexShrink: 0 }} onClick={() => onTicketAct(t)}>{t.act === 'approve' ? 'Approve' : 'Answer'}</button>}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <Status kind={t.sk}>{t.status}</Status>
+                <span style={{ fontSize: 12, color: t.pk === 'warn' ? 'var(--ink2)' : 'var(--muted)' }}>{t.pri} priority</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
       <Card>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
@@ -119,6 +140,7 @@ export function Tickets({ tickets, onWizard, onTicketAct }) {
           </table>
         </div>
       </Card>
+      )}
     </>
   )
 }
@@ -126,6 +148,7 @@ const cell = (bold) => ({ padding: '17px 28px', borderBottom: '1px solid var(--l
 
 /* ---------------------------------------------------------------- People */
 export function People({ people, search, setSearch, onManage, onOnboard }) {
+  const isMobile = useIsMobile()
   const q = search.trim().toLowerCase()
   const filtered = people.filter((p) => !q || `${p.name} ${p.role} ${p.email}`.toLowerCase().includes(q))
   return (
@@ -137,13 +160,16 @@ export function People({ people, search, setSearch, onManage, onOnboard }) {
         onChange={(e) => setSearch(e.target.value)} placeholder="Search people" />
       <Card>
         {filtered.map((p, i) => (
-          <div key={i} className="row-hover" style={listRowStyle}>
+          <div key={i} className="row-hover" style={{ ...listRowStyle, padding: isMobile ? '13px 16px' : listRowStyle.padding }}>
             <Avatar name={p.name} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 550 }}>{p.name}</div>
-              <div style={{ fontSize: 12, color: 'var(--muted)' }}>{p.role} · {p.email}</div>
+              <div style={{ fontSize: 13.5, fontWeight: 550, display: 'flex', alignItems: 'center', gap: 7 }}>
+                {isMobile && <span style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: (PILL[p.sk] || PILL.mut).dot }} />}
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isMobile ? p.role : `${p.role} · ${p.email}`}</div>
             </div>
-            <Status kind={p.sk}>{p.status}</Status>
+            {!isMobile && <Status kind={p.sk}>{p.status}</Status>}
             <button className="btn btn-ghost btn-sm" onClick={() => onManage(p)}>Manage</button>
           </div>
         ))}
@@ -194,10 +220,11 @@ export function Security({ grade, gradePct, onExport }) {
 
 /* ---------------------------------------------------------------- Training */
 export function Training({ training, nudged, onNudge }) {
+  const isMobile = useIsMobile()
   return (
     <>
       <ViewHeader title="Security Training" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
+      <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="84%" label="Overall completion" />
         <Stat n="3" label="Overdue" />
         <Stat n="12" label="Modules assigned" />
@@ -206,6 +233,28 @@ export function Training({ training, nudged, onNudge }) {
         {training.map((u, i) => {
           const done = u.pct === 100
           const isNudged = nudged.includes(u.name)
+          const rightZone = (
+            <>
+              {done && <Status kind="ok">Complete</Status>}
+              {!done && u.overdue && !isNudged && (
+                <button className="btn btn-dark btn-sm" onClick={() => onNudge(u.name)}>Nudge</button>
+              )}
+              {isNudged && <Status kind="mut" muted>Nudged ✓</Status>}
+            </>
+          )
+          if (isMobile) {
+            return (
+              <div key={i} className="row-hover" style={{ ...listRowStyle, flexWrap: 'wrap', padding: '13px 16px' }}>
+                <Avatar name={u.name} />
+                <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 550 }}>{u.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{rightZone}</div>
+                <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Bar pct={u.pct} color="var(--muted)" />
+                  <div style={{ width: 40, fontSize: 12.5, color: 'var(--ink2)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{u.pct}%</div>
+                </div>
+              </div>
+            )
+          }
           return (
             <div key={i} className="row-hover" style={listRowStyle}>
               <Avatar name={u.name} />
@@ -213,11 +262,7 @@ export function Training({ training, nudged, onNudge }) {
               <Bar pct={u.pct} color="var(--muted)" />
               <div style={{ width: 44, fontSize: 12.5, color: 'var(--ink2)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{u.pct}%</div>
               <div style={{ width: 150, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
-                {done && <Status kind="ok">Complete</Status>}
-                {!done && u.overdue && !isNudged && (
-                  <button className="btn btn-dark btn-sm" onClick={() => onNudge(u.name)}>Nudge</button>
-                )}
-                {isNudged && <Status kind="mut" muted>Nudged ✓</Status>}
+                {rightZone}
               </div>
             </div>
           )
@@ -229,28 +274,42 @@ export function Training({ training, nudged, onNudge }) {
 
 /* ---------------------------------------------------------------- Costs */
 export function Costs({ reclaimed, onReclaim, onReclaimAll }) {
+  const isMobile = useIsMobile()
   const rows = LICENSES.map((l) => ({ ...l, unused: reclaimed.includes(l.title) ? 0 : l.total - l.used }))
   const idleTotal = rows.reduce((s, l) => s + l.unused, 0)
+  const reclaimBtn = (l) => l.unused > 0
+    ? <button className="btn btn-ghost" style={{ padding: '5px 11px', fontSize: 11.5, borderRadius: 7, fontWeight: 550, whiteSpace: 'nowrap' }} onClick={() => onReclaim(l.title, l.unused)}>Reclaim {l.unused} idle</button>
+    : reclaimed.includes(l.title) ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: 'var(--muted)', animation: 'slideUp .25s ease both' }}>✓ Reclaimed</span> : null
   return (
     <>
       <ViewHeader title="Costs" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
+      <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="$4,820" label="IT costs / mo" />
         <Stat n="$104" label="Per person / mo" />
         <Stat n={idleTotal} label="Idle licenses" />
       </div>
-      <Card title="Licenses by title" right={idleTotal > 0 ? <button className="btn btn-dark btn-sm" onClick={onReclaimAll}>Reclaim {idleTotal} idle seats</button> : null}>
+      <Card title="Licenses by title" right={idleTotal > 0 ? <button className="btn btn-dark btn-sm" onClick={onReclaimAll}>Reclaim {idleTotal}</button> : null}>
         {rows.map((l, i) => {
+          if (isMobile) {
+            return (
+              <div key={i} className="row-hover" style={{ ...listRowStyle, flexWrap: 'wrap', padding: '13px 16px' }}>
+                <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 550 }}>{l.title}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{l.cost}/mo</div>
+                <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Bar pct={Math.round(l.used / l.total * 100)} />
+                  <div style={{ fontSize: 12, color: 'var(--ink2)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{l.used}/{l.total}</div>
+                  {reclaimBtn(l)}
+                </div>
+              </div>
+            )
+          }
           return (
             <div key={i} className="row-hover" style={listRowStyle}>
               <div style={{ width: 220, fontSize: 13.5, fontWeight: 550 }}>{l.title}</div>
               <Bar pct={Math.round(l.used / l.total * 100)} />
               <div style={{ width: 70, fontSize: 12.5, color: 'var(--ink2)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{l.used} / {l.total}</div>
               <div style={{ width: 64, fontSize: 12.5, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{l.cost}</div>
-              <div style={{ width: 112, display: 'flex', justifyContent: 'flex-end' }}>
-                {l.unused > 0 && <button className="btn btn-ghost" style={{ padding: '5px 11px', fontSize: 11.5, borderRadius: 7, fontWeight: 550, whiteSpace: 'nowrap' }} onClick={() => onReclaim(l.title, l.unused)}>Reclaim {l.unused} idle</button>}
-                {reclaimed.includes(l.title) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: 'var(--muted)', animation: 'slideUp .25s ease both' }}>✓ Reclaimed</span>}
-              </div>
+              <div style={{ width: 112, display: 'flex', justifyContent: 'flex-end' }}>{reclaimBtn(l)}</div>
             </div>
           )
         })}

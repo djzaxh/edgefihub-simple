@@ -60,6 +60,7 @@ body.dark {
 * { box-sizing: border-box; }
 
 html, body, #root { height: 100%; }
+body, #root { max-width: 100%; overflow-x: hidden; }
 
 body {
   margin: 0;
@@ -156,10 +157,6 @@ tbody tr:hover { background: var(--soft2); }
 ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 8px; border: 2px solid var(--surface); }
 ::-webkit-scrollbar-track { background: transparent; }
 
-/* mobile top bar — hidden on desktop */
-.mobbar { display: none; }
-@media (max-width: 720px) { .mobbar { display: flex; } }
-
 /* nav item hover slide */
 .navbtn:hover span:first-child { transform: translateX(4px); }
 .navbtn span:first-child { transition: transform .22s cubic-bezier(.2,.8,.2,1); display: inline-block; }
@@ -180,19 +177,10 @@ tbody tr:hover { background: var(--soft2); }
 @media (max-width: 900px) {
   .ov-grid { grid-template-columns: 1fr !important; }
 }
+/* phone: 2-up KPI stats, single-column NIST — the shell itself is the
+   dedicated mobile layout (top bar + bottom tab nav) rendered from App. */
 @media (max-width: 720px) {
-  .sidebar {
-    position: fixed; z-index: 50;
-    width: 210px !important;
-    background: var(--surface);
-    border-right: 1px solid var(--line);
-    transform: translateX(-100%);
-    transition: transform .25s ease;
-    box-shadow: 0 0 40px rgba(0,0,0,.15);
-  }
-  body.nav-open .sidebar { transform: translateX(0); }
-  main { margin: 0 !important; border-radius: 0 !important; border: none !important; }
-  .content { padding: 18px 16px 80px !important; }
+  .kpi { grid-template-columns: 1fr 1fr !important; }
   .nist-grid { grid-template-columns: 1fr !important; }
 }
 

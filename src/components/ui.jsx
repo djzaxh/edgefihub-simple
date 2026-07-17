@@ -1,5 +1,18 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { PILL, initials as toInitials, RING_C } from '../data.js'
+
+// True when the viewport is phone-sized. Drives the dedicated mobile layout.
+export function useIsMobile(bp = 720) {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth <= bp)
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width:${bp}px)`)
+    const on = () => setM(mq.matches)
+    on()
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [bp])
+  return m
+}
 
 // Neutral tag chip — used sparingly for standalone callouts (not per-row).
 export function Pill({ kind = 'mut', children }) {
@@ -98,6 +111,12 @@ export function Bar({ pct, color = 'var(--ink)', height = 6 }) {
 export const listRowStyle = {
   display: 'flex', alignItems: 'center', gap: 14,
   padding: '15px 24px', borderBottom: '1px solid var(--line2)',
+}
+
+// Stacked record card used on mobile in place of a table row.
+export const mobileCardStyle = {
+  background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12,
+  padding: '15px 16px', marginBottom: 10, display: 'flex', flexDirection: 'column', gap: 11,
 }
 
 // edgefi activity feed — shows automated / edgefi-handled actions.

@@ -1,6 +1,6 @@
 import React from 'react'
 import { QUEUE, CUSTOMERS, INT_NAMES, FLAGS, AUDIT, firstName } from '../data.js'
-import { Status, Stat, ViewHeader, Card, listRowStyle, Chip } from '../components/ui.jsx'
+import { Status, Stat, ViewHeader, Card, listRowStyle, mobileCardStyle, useIsMobile, Chip } from '../components/ui.jsx'
 import { Warn, Check } from '../icons.jsx'
 
 const cell = (bold) => ({ padding: '17px 28px', borderBottom: '1px solid var(--line2)', fontSize: 13.5, fontWeight: bold ? 550 : 400, verticalAlign: 'middle' })
@@ -12,17 +12,38 @@ const datePill = (text) => (
 
 /* ---------------------------------------------------------------- JML queue */
 export function Queue() {
+  const isMobile = useIsMobile()
   const open = QUEUE.filter((q) => q.sk !== 'ok').length
   const blocked = QUEUE.filter((q) => q.sk === 'warn').length
   return (
     <>
       <ViewHeader title="JML queue">{datePill('Tuesday, Jul 15')}</ViewHeader>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
+      <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n={open} label="In flight" />
         <Stat n={blocked} label="Blocked" />
         <Stat n="3" label="Fully automated" />
         <Stat n="12" label="Clients" />
       </div>
+      {isMobile ? (
+        <div>
+          {QUEUE.map((q, i) => (
+            <div key={i} style={mobileCardStyle}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{q.type} — {q.person}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{q.client}</div>
+                </div>
+                <span style={{ fontSize: 12, color: 'var(--faint)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{q.age}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <Status kind={q.sk}>{q.status}</Status>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>{q.handler}</span>
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--faint)' }}>{q.stage}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
       <Card>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 860 }}>
@@ -56,21 +77,43 @@ export function Queue() {
           </table>
         </div>
       </Card>
+      )}
     </>
   )
 }
 
 /* ---------------------------------------------------------------- Clients */
 export function Customers({ onViewAs }) {
+  const isMobile = useIsMobile()
   return (
     <>
       <ViewHeader title="Clients" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
+      <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="12" label="Active clients" />
         <Stat n="438" label="Users under management" />
         <Stat n="1" label="Integration error" />
         <Stat n="7" label="JML workflows in flight" />
       </div>
+      {isMobile ? (
+        <div>
+          {CUSTOMERS.map((c, i) => (
+            <div key={i} style={mobileCardStyle}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{c.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{c.admin} · {c.adminRole}</div>
+                </div>
+                <span style={{ fontSize: 15, fontWeight: 700, flexShrink: 0 }}>{c.grade}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <Status kind={c.sk}>{c.status}</Status>
+                <span style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{c.users} users</span>
+              </div>
+              <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => onViewAs(c)}>View as {firstName(c.admin)}</button>
+            </div>
+          ))}
+        </div>
+      ) : (
       <Card>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
@@ -107,6 +150,7 @@ export function Customers({ onViewAs }) {
           </table>
         </div>
       </Card>
+      )}
     </>
   )
 }
@@ -116,7 +160,7 @@ export function Watchtower({ onFlag }) {
   return (
     <>
       <ViewHeader title="Watchtower">{datePill('4 open across 12 clients')}</ViewHeader>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
+      <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="2" label="Devices unpatched" />
         <Stat n="3" label="Training overdue" />
         <Stat n="2" label="MFA gaps" />

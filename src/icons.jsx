@@ -99,3 +99,19 @@ export const Plus = ({ size }) => (
     <path d="M12 5v14M5 12h14" />
   </svg>
 )
+export const Dots = ({ size }) => (
+  <svg {...base(size ?? 20, 2)}>
+    <circle cx="12" cy="5" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="12" cy="19" r="1.4" />
+  </svg>
+)
+
+// --- bottom-nav / page icons (stroke, currentColor) ---
+export const Home = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><path d="M3 10.5L12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" /></svg>)
+export const Ticket = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z" /></svg>)
+export const Users = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><circle cx="9" cy="8" r="3.2" /><path d="M3 20a6 6 0 0 1 12 0" /><path d="M16 5.5a3 3 0 0 1 0 5.5M21 20a5.6 5.6 0 0 0-4-5.3" /></svg>)
+export const Shield = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z" /></svg>)
+export const GradCap = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><path d="M12 4L2 9l10 5 10-5z" /><path d="M6 11v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5" /></svg>)
+export const CreditCard = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M2.5 9.5h19" /></svg>)
+export const Layers = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><path d="M12 3l9 5-9 5-9-5z" /><path d="M3 13l9 5 9-5" /></svg>)
+export const Building = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><rect x="4" y="3" width="16" height="18" rx="1.5" /><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01M9 15h.01M15 15h.01" /></svg>)
+export const Clipboard = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 4a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4v1H9z" /><path d="M9 11h6M9 15h4" /></svg>)

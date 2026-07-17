@@ -2,11 +2,16 @@ import React, { useEffect, useRef, useState } from 'react'
 import {
   NAV, BADGES, CLIENT_KEYS, TECH_KEYS, GRADE_PCT, TICKETS, PEOPLE, PRIOS, TRAINING, LICENSES, initials, firstName,
 } from './data.js'
-import { Sun, Moon, Help as HelpIcon, Gear, Eye, Check } from './icons.jsx'
+import { Sun, Moon, Help as HelpIcon, Gear, Eye, Check, Dots, Warn, Home, Ticket, Users, Shield, GradCap, CreditCard, Layers, Building, Clipboard } from './icons.jsx'
 import { Overview, Tickets, People, Security, Training, Costs } from './views/ClientViews.jsx'
 import { Queue, Customers, Watchtower, Audit } from './views/TechViews.jsx'
 import { KB, KBArticle, Settings } from './views/Help.jsx'
 import { Wizard, Manage, Offboard, TicketAction } from './components/Modals.jsx'
+import { useIsMobile } from './components/ui.jsx'
+
+// bottom-nav icons + short labels per page
+const NAV_ICONS = { overview: Home, tickets: Ticket, people: Users, security: Shield, training: GradCap, costs: CreditCard, queue: Layers, customers: Building, remediation: Warn, audit: Clipboard }
+const NAV_SHORT = { overview: 'Home', tickets: 'Tickets', people: 'People', security: 'Security', training: 'Training', costs: 'Costs', queue: 'Queue', customers: 'Clients', remediation: 'Watchtower', audit: 'Audit' }
 
 // Per-role page permissions for client Modes — each role only sees what's relevant.
 //   Owner       — full access; general overview + security focus
@@ -67,9 +72,9 @@ export default function App() {
   const [offboard, setOffboard] = useState(null)  // name | null
   const [ticketAct, setTicketAct] = useState(null)// ticket | null
 
-  // ---- mobile nav drawer
-  const [mobOpen, setMobOpen] = useState(false)
-  useEffect(() => { document.body.classList.toggle('nav-open', mobOpen) }, [mobOpen])
+  // ---- mobile
+  const isMobile = useIsMobile()
+  const [moreOpen, setMoreOpen] = useState(false)
 
   // ---- toast
   const [toastMsg, setToastMsg] = useState('')
@@ -100,12 +105,17 @@ export default function App() {
   useEffect(() => { setNav(null); setSearch('') }, [workspace, imp, role])
 
   const go = (k) => {
-    setMobOpen(false)
+    setMoreOpen(false)
     if (k === effNav && !['kb', 'kbArticle', 'settings'].includes(k)) return
     setNavLoading(true)
     setNav(k)
     setTimeout(() => setNavLoading(false), 480)
   }
+
+  // mobile bottom-nav split: up to 4 primary tabs + a "More" tab for the rest
+  const primaryTabs = allowedPages.slice(0, 4)
+  const moreItems = allowedPages.slice(4)
+  const moreActive = !primaryTabs.includes(effNav)
 
   // ---- sidebar groups
   const visible = (k) => modeKeys.includes(k) && itemCfg[k]?.show
@@ -173,12 +183,12 @@ export default function App() {
   }
 
   const logoMark = (
-    <img src="/logomark-black.png" alt="edgefi"
+    <img src={dark ? '/logomark-white.png' : '/logomark-black.png'} alt="edgefi"
       width={25} height={25} style={{ objectFit: 'contain', display: 'block' }} />
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', maxWidth: '100vw', overflow: 'hidden' }}>
       {/* impersonation banner */}
       {imp && (
         <div style={{ position: 'sticky', top: 0, zIndex: 60, background: 'var(--purple-soft)', borderBottom: '1px solid var(--purple-soft)', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -191,20 +201,33 @@ export default function App() {
         </div>
       )}
 
-      {/* mobile top bar */}
-      <div className="mobbar" style={{ alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid var(--line)', background: 'var(--surface)' }}>
-        <button className="iconbtn" aria-label="Menu" onClick={() => setMobOpen((o) => !o)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
-        </button>
-        {logoMark}
-        <b style={{ fontSize: 16, letterSpacing: '-0.2px', fontWeight: 500 }}>edgefi <span style={{ fontWeight: 700 }}>hub</span></b>
-        <div style={{ flex: 1 }} />
-        <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--soft)', border: '1px solid var(--line)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 600, color: 'var(--ink2)' }}>{initials(userName)}</div>
-      </div>
+      {isMobile ? (
+        <>
+          {/* mobile top bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--line)', background: 'var(--surface)', flexShrink: 0 }}>
+            {logoMark}
+            <b style={{ fontSize: 16, letterSpacing: '-0.2px', fontWeight: 500 }}>edgefi <span style={{ fontWeight: 700 }}>hub</span></b>
+            <div style={{ flex: 1 }} />
+            <button className="iconbtn" onClick={() => setDark((d) => !d)} aria-label="Toggle theme">{dark ? <Sun /> : <Moon />}</button>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--soft)', border: '1px solid var(--line)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 600, color: 'var(--ink2)' }}>{initials(userName)}</div>
+          </div>
 
+          {/* scrollable content */}
+          <main style={{ flex: 1, minHeight: 0, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', position: 'relative', background: 'var(--bg)' }}>
+            {navLoading && <div style={{ height: 2, position: 'sticky', top: 0, zIndex: 5, overflow: 'hidden' }}><div style={{ position: 'absolute', top: 0, height: '100%', width: '35%', background: 'var(--purple)', animation: 'loadbar .5s ease-out infinite' }} /></div>}
+            <div className="content" style={{ padding: '18px 16px 28px' }}>{renderView()}</div>
+          </main>
+
+          {/* bottom tab bar */}
+          <BottomNav items={primaryTabs} effNav={effNav} onGo={go} onMore={() => setMoreOpen(true)} moreActive={moreActive} />
+          {moreOpen && (
+            <MoreSheet moreItems={moreItems} effNav={effNav} onGo={go} onClose={() => setMoreOpen(false)}
+              dark={dark} setDark={setDark} imp={imp} onExitImp={() => { setImp(null); setNav('customers'); setMoreOpen(false) }}
+              personaProps={{ workspace, setWorkspace, role, setRole, grade, setGrade, imp, clientMode }} />
+          )}
+        </>
+      ) : (
       <div style={{ display: 'flex', flex: 1, minHeight: 0, position: 'relative' }}>
-        {/* mobile backdrop */}
-        {mobOpen && <div className="mob-backdrop" onClick={() => setMobOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 45, background: 'rgba(0,0,0,.35)' }} />}
         {/* sidebar */}
         <aside className="sidebar" style={{ width: 232, flexShrink: 0, display: 'flex', flexDirection: 'column', padding: '30px 24px 22px', height: '100%', boxSizing: 'border-box' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -255,6 +278,7 @@ export default function App() {
           </div>
         </main>
       </div>
+      )}
 
       {/* modals */}
       {wizard && <Wizard initial={wizard} onClose={() => setWizard(null)} onSubmit={submitWizard} />}
@@ -264,7 +288,7 @@ export default function App() {
 
       {/* toast */}
       {toastMsg && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 200, background: 'var(--ink)', color: 'var(--surface)', borderRadius: 10, padding: '11px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 9, boxShadow: '0 8px 30px rgba(10,10,10,.25)', animation: 'rise .25s cubic-bezier(.2,.8,.2,1) both' }}>
+        <div style={{ position: 'fixed', bottom: isMobile ? 82 : 24, left: '50%', transform: 'translateX(-50%)', zIndex: 200, background: 'var(--ink)', color: 'var(--surface)', borderRadius: 10, padding: '11px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 9, boxShadow: '0 8px 30px rgba(10,10,10,.25)', animation: 'rise .25s cubic-bezier(.2,.8,.2,1) both', maxWidth: 'calc(100vw - 32px)' }}>
           <span style={{ color: 'var(--lime)', display: 'grid' }}><Check size={14} sw={3} /></span>{toastMsg}
         </div>
       )}
@@ -275,6 +299,62 @@ export default function App() {
 /* -------- Restricted (costs without permission) -------- */
 function Restricted() {
   return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>This section is available to Owner and CFO roles.</div>
+}
+
+/* -------- Mobile bottom tab bar -------- */
+function BottomNav({ items, effNav, onGo, onMore, moreActive }) {
+  const tab = (active) => ({ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '9px 4px 8px', minHeight: 56, background: 'none', border: 'none', cursor: 'pointer', color: active ? 'var(--ink)' : 'var(--faint)' })
+  return (
+    <nav style={{ display: 'flex', borderTop: '1px solid var(--line)', background: 'var(--surface)', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      {items.map((k) => {
+        const Icon = NAV_ICONS[k] || Home
+        const active = effNav === k
+        return (
+          <button key={k} style={tab(active)} onClick={() => onGo(k)} aria-label={NAV_SHORT[k]}>
+            <Icon size={21} />
+            <span style={{ fontSize: 10.5, fontWeight: active ? 600 : 500 }}>{NAV_SHORT[k]}</span>
+          </button>
+        )
+      })}
+      <button style={tab(moreActive)} onClick={onMore} aria-label="More">
+        <Dots size={21} />
+        <span style={{ fontSize: 10.5, fontWeight: moreActive ? 600 : 500 }}>More</span>
+      </button>
+    </nav>
+  )
+}
+
+/* -------- Mobile "More" bottom sheet (secondary nav + settings + demo) -------- */
+function MoreSheet({ moreItems, effNav, onGo, onClose, dark, setDark, imp, onExitImp, personaProps }) {
+  const rowStyle = (active) => ({ display: 'flex', alignItems: 'center', gap: 13, width: '100%', padding: '14px 6px', background: 'none', border: 'none', borderBottom: '1px solid var(--line2)', cursor: 'pointer', color: 'var(--ink)', fontSize: 14, fontWeight: 500, textAlign: 'left' })
+  const item = (label, Icon, onClick, active) => (
+    <button onClick={onClick} style={rowStyle(active)}>
+      <span style={{ color: active ? 'var(--ink)' : 'var(--faint)', display: 'grid' }}><Icon size={20} /></span>
+      <span style={{ flex: 1 }}>{label}</span>
+      {active && <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--ink)' }} />}
+    </button>
+  )
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 120, background: 'rgba(10,10,10,.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', animation: 'fade .2s ease both' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', background: 'var(--surface)', borderRadius: '16px 16px 0 0', padding: '10px 18px calc(18px + env(safe-area-inset-bottom))', maxHeight: '82vh', overflowY: 'auto', animation: 'rise .26s cubic-bezier(.2,.8,.2,1) both' }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--line-strong)', margin: '4px auto 12px' }} />
+        {moreItems.map((k) => item(NAV[k], NAV_ICONS[k] || Home, () => onGo(k), effNav === k))}
+        {item('Settings', Gear, () => onGo('settings'), effNav === 'settings')}
+        {item('Help center', HelpIcon, () => onGo('kb'), effNav === 'kb' || effNav === 'kbArticle')}
+        <button onClick={() => setDark((d) => !d)} style={rowStyle(false)}>
+          <span style={{ color: 'var(--faint)', display: 'grid' }}>{dark ? <Sun size={20} /> : <Moon size={20} />}</span>
+          <span style={{ flex: 1 }}>{dark ? 'Light mode' : 'Dark mode'}</span>
+        </button>
+        {imp && (
+          <button onClick={onExitImp} style={{ ...rowStyle(false), color: 'var(--purple)' }}>
+            <span style={{ color: 'var(--purple)', display: 'grid' }}><Eye size={20} /></span>
+            <span style={{ flex: 1 }}>Exit “view as”</span>
+          </button>
+        )}
+        <div style={{ marginTop: 8 }}><PersonaControls {...personaProps} /></div>
+      </div>
+    </div>
+  )
 }
 
 /* -------- Demo persona switcher -------- */
