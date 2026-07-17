@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import {
   HERO, CHART, CHART_LABELS, NIST, LICENSES, ACTIVITY, SEC_ACTIVITY, PILL,
 } from '../data.js'
-import { Pill, Status, Stat, Avatar, ViewHeader, Card, GradeRing, Meter, ActivityFeed, listRowStyle, mobileCardStyle, useIsMobile } from '../components/ui.jsx'
+import { Pill, Status, Stat, Avatar, ViewHeader, Card, GradeRing, Meter, ActivityFeed, listRowStyle, mobileCardStyle, useIsMobile, pickTopChip } from '../components/ui.jsx'
 import { Search } from '../icons.jsx'
 
 /* ---------------------------------------------------------------- Overview */
@@ -181,6 +181,12 @@ export function People({ people, search, setSearch, onManage, onOnboard }) {
 
 /* ---------------------------------------------------------------- Security */
 export function Security({ grade, gradePct, onExport }) {
+  // one indicator chip only — highest priority wins (warn > prov here)
+  const topChip = pickTopChip([
+    { kind: 'warn', label: 'MFA · 2 accounts' },
+    { kind: 'warn', label: 'Patching · 2 devices' },
+    { kind: 'prov', label: 'Hardening controls' },
+  ])
   return (
     <>
       <ViewHeader title="Security">
@@ -192,11 +198,8 @@ export function Security({ grade, gradePct, onExport }) {
           <div style={{ flex: 1, minWidth: 200 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <b style={{ fontSize: 16, fontWeight: 600 }}>Security posture grade</b>
-              <Pill kind="prov">Hardening controls</Pill>
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-              <Pill kind="warn">MFA · 2 accounts</Pill>
-              <Pill kind="warn">Patching · 2 devices</Pill>
+              {/* one indicator chip only — the highest-priority status */}
+              {topChip && <Pill kind={topChip.kind}>{topChip.label}</Pill>}
             </div>
           </div>
         </div>

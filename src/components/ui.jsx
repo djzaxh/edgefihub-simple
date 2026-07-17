@@ -26,6 +26,12 @@ export function Pill({ kind = 'mut', children }) {
   )
 }
 
+// One-indicator-chip rule: a surface shows at most one chip — the highest-priority
+// status. Collect candidates and pick the top; ties keep the first.
+export const CHIP_PRIORITY = { err: 4, warn: 3, prov: 2, ok: 1, mut: 0 }
+export const pickTopChip = (chips = []) =>
+  chips.reduce((top, c) => ((CHIP_PRIORITY[c.kind] ?? 0) > (CHIP_PRIORITY[top?.kind] ?? -1) ? c : top), null)
+
 // Lightweight inline status: a small dot + plain text, no chip background.
 // This is what rows in tables/lists use — far calmer than a badge per row.
 export function Status({ kind = 'mut', children, muted }) {
