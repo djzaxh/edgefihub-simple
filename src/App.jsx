@@ -7,6 +7,7 @@ import { Overview, Tickets, People, Security, Training, Costs } from './views/Cl
 import { Queue, Customers, Watchtower, Audit } from './views/TechViews.jsx'
 import { KB, KBArticle, Settings } from './views/Help.jsx'
 import { Wizard, Manage, Offboard, TicketAction } from './components/Modals.jsx'
+import Sheet from './components/Sheet.jsx'
 import { useIsMobile } from './components/ui.jsx'
 
 // bottom-nav icons + short labels per page
@@ -309,22 +310,67 @@ function Restricted() {
   return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>This section is available to Owner and CFO roles.</div>
 }
 
-/* -------- Mobile bottom nav — a floating island that sits on the page bg
-   (margins all around → no full-width bar meeting a different-colored safe area) -------- */
+/* -------- Mobile bottom nav — a floating glass pill with a liquid-glass
+   selector you can tap OR drag between tabs -------- */
 function BottomNav({ items, effNav, onGo, onMore, moreActive }) {
   const tabs = [
     ...items.map((k) => ({ k, Icon: NAV_ICONS[k] || Home, label: NAV_SHORT[k], active: effNav === k, onClick: () => onGo(k) })),
     { k: '__more', Icon: Dots, label: 'More', active: moreActive, onClick: onMore },
   ]
+  const n = tabs.length
+  const activeIndex = Math.max(0, tabs.findIndex((t) => t.active))
+  const pct = 100 / n
+  const trackRef = useRef(null)
+  const drag = useRef({ active: false })
+  const [dragLeft, setDragLeft] = useState(null) // px while dragging, else null
+  const suppressClick = useRef(false)
+
+  const down = (e) => {
+    const rect = trackRef.current.getBoundingClientRect()
+    drag.current = { active: true, start: e.clientX, left: rect.left, width: rect.width, tw: rect.width / n, moved: false }
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch (_) {}
+  }
+  const move = (e) => {
+    const d = drag.current
+    if (!d.active) return
+    if (d.moved || Math.abs(e.clientX - d.start) > 6) {
+      d.moved = true
+      let x = e.clientX - d.left - d.tw / 2
+      x = Math.max(0, Math.min(x, d.width - d.tw))
+      setDragLeft(x)
+    }
+  }
+  const up = () => {
+    const d = drag.current
+    if (!d.active) return
+    d.active = false
+    if (d.moved && dragLeft != null) {
+      const idx = Math.max(0, Math.min(Math.round(dragLeft / d.tw), n - 1))
+      suppressClick.current = true
+      setTimeout(() => { suppressClick.current = false }, 60)
+      if (!tabs[idx].active) tabs[idx].onClick()
+    }
+    setDragLeft(null)
+  }
+
+  const selStyle = dragLeft != null
+    ? { left: dragLeft, width: `${drag.current.tw}px`, transition: 'none' }
+    : { left: `${activeIndex * pct}%`, width: `${pct}%`, transition: 'left .38s cubic-bezier(.34,1.35,.5,1)' }
+
   return (
-    <nav className="tabbar-float" style={{ position: 'fixed', left: 14, right: 14, bottom: 'calc(env(safe-area-inset-bottom) + 12px)', zIndex: 90, display: 'flex', alignItems: 'stretch', padding: '5px 6px', borderRadius: 26 }}>
-      {tabs.map(({ k, Icon, label, active, onClick }) => (
-        <button key={k} onClick={onClick} aria-label={label}
-          style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 2px', border: 'none', cursor: 'pointer', borderRadius: 18, color: active ? 'var(--ink)' : 'var(--faint)', background: active ? 'var(--soft)' : 'transparent', transition: 'background .18s ease, color .18s ease' }}>
-          <Icon size={20} />
-          <span style={{ fontSize: 10, fontWeight: active ? 600 : 500, letterSpacing: '.01em' }}>{label}</span>
-        </button>
-      ))}
+    <nav className="tabbar-float" style={{ position: 'fixed', left: 14, right: 14, bottom: 'calc(env(safe-area-inset-bottom) + 12px)', zIndex: 90, padding: 6, borderRadius: 34 }}
+      onClickCapture={(e) => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation() } }}>
+      <div ref={trackRef} style={{ position: 'relative', display: 'flex', alignItems: 'stretch', touchAction: 'none' }}
+        onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
+        <div className="glass-selector" style={{ position: 'absolute', top: 0, bottom: 0, borderRadius: 26, zIndex: 0, cursor: 'grab', ...selStyle }} />
+        {tabs.map(({ k, Icon, label, active, onClick }) => (
+          <button key={k} onClick={onClick} aria-label={label}
+            style={{ position: 'relative', zIndex: 1, flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '9px 2px', border: 'none', background: 'none', cursor: 'pointer', color: active ? 'var(--ink)' : 'var(--faint)', transition: 'color .2s ease' }}>
+            <Icon size={20} />
+            <span style={{ fontSize: 10, fontWeight: active ? 600 : 500, letterSpacing: '.01em' }}>{label}</span>
+          </button>
+        ))}
+      </div>
     </nav>
   )
 }
@@ -365,9 +411,8 @@ function MoreSheet({ moreItems, effNav, onGo, onClose, userName, dark, setDark }
     </button>
   )
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 120, background: 'rgba(10,10,10,.4)', display: 'flex', alignItems: 'flex-end', animation: 'fade .18s ease both' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '10px 20px calc(16px + env(safe-area-inset-bottom))', maxHeight: '82vh', overflowY: 'auto', boxShadow: '0 -8px 40px rgba(10,10,10,.18)', animation: 'sheetUp .28s cubic-bezier(.16,1,.3,1) both' }}>
-        <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--line-strong)', margin: '4px auto 14px' }} />
+    <Sheet onClose={onClose} maxWidth={560}>
+      <div style={{ padding: '4px 20px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '4px 6px 14px' }}>
           <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--soft)', border: '1px solid var(--line)', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 600, color: 'var(--ink2)' }}>{initials(userName)}</div>
           <div style={{ fontSize: 15, fontWeight: 600 }}>{userName}</div>
@@ -381,7 +426,7 @@ function MoreSheet({ moreItems, effNav, onGo, onClose, userName, dark, setDark }
           <span style={{ flex: 1 }}>{dark ? 'Light mode' : 'Dark mode'}</span>
         </button>
       </div>
-    </div>
+    </Sheet>
   )
 }
 
