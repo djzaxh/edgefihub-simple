@@ -1,7 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* ===========================================================================
    edgefi hub — design tokens, base styles, animations
    Ported faithfully from the EdgeHub Claude Design source.
@@ -190,7 +186,9 @@ tbody tr:hover { background: var(--soft2); }
 
 /* sidebar nav items read as buttons: hover fills a soft background, active is
    shown by weight (no underline) */
-/* sidebar nav buttons are styled with Tailwind utilities in App.jsx now */
+.navbtn { background: none; border-radius: 10px; transition: background .14s ease; }
+.navbtn:hover { background: var(--line); }
+.navbtn.active { background: var(--line); }
 
 /* security NIST grid */
 .nist-grid { grid-template-columns: repeat(5, 1fr); }

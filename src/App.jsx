@@ -259,10 +259,9 @@ export default function App() {
                 {g.items.map((k) => {
                   const sel = effNav === k
                   return (
-                    <button key={k} onClick={() => go(k)}
-                      className={`flex items-center gap-2 -mx-3 px-3 py-2.5 rounded-[10px] border-0 cursor-pointer text-left text-[13.5px] transition-colors ${sel ? 'bg-line-strong' : 'bg-transparent hover:bg-line-strong'}`}>
-                      <span className={`flex-1 ${sel ? 'font-semibold text-ink' : 'font-normal text-ink-2'}`}>{NAV[k]}</span>
-                      {BADGES[k] && <span className="text-[11px] font-medium text-faint tabular-nums">{BADGES[k]}</span>}
+                    <button key={k} onClick={() => go(k)} className={`navbtn${sel ? ' active' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', margin: '0 -12px', border: 'none', cursor: 'pointer', fontSize: 13.5, textAlign: 'left', color: 'var(--ink)' }}>
+                      <span style={{ flex: 1, fontWeight: sel ? 600 : 450, color: sel ? 'var(--ink)' : 'var(--ink2)' }}>{NAV[k]}</span>
+                      {BADGES[k] && <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--faint)', fontVariantNumeric: 'tabular-nums' }}>{BADGES[k]}</span>}
                     </button>
                   )
                 })}
