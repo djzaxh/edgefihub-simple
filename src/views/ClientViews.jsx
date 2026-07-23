@@ -10,7 +10,7 @@ import { Search } from '../icons.jsx'
 const TICKET_TONE = { prov: 'progress', warn: 'warning', mut: 'neutral', ok: 'success', err: 'danger' }
 
 /* ---------------------------------------------------------------- Overview */
-export function Overview({ userFirst, grade, gradePct, prios, costsAllowed, tickets, onWizard, onTicketAct }) {
+export function Overview({ userFirst, grade, gradePct, prios, costsAllowed, tickets, onWizard, onTicketAct, onCustomize }) {
   const [hot, setHot] = useState(null)
   const heroMap = HERO(grade)
   const enabled = prios.filter((p) => p.on && (p.k !== 'IT costs / mo' || costsAllowed))
@@ -25,17 +25,37 @@ export function Overview({ userFirst, grade, gradePct, prios, costsAllowed, tick
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0 26px', flexWrap: 'wrap', animation: 'slideUp .3s ease both' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 26px', flexWrap: 'wrap', animation: 'slideUp .3s ease both' }}>
         <h1 className="h1" style={{ fontSize: 24 }}>Welcome, {userFirst}</h1>
-        <button className="btn btn-dark" style={{ marginLeft: 'auto' }} onClick={onWizard}>Ask for Help</button>
+        <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={onCustomize}>Customize</button>
+        <button className="btn btn-dark" onClick={onWizard}>Ask for Help</button>
       </div>
+
+      {/* C1 — the day's to-dos come before the at-a-glance numbers */}
+      {attention.length > 0 && (
+        <div className="card" style={{ marginBottom: 18, animation: 'slideUp .32s ease both' }}>
+          <div style={{ padding: '18px 28px 10px', fontSize: 13.5, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+            Needs your attention
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--faint)', fontVariantNumeric: 'tabular-nums' }}>{attention.length}</span>
+          </div>
+          {attention.map((a, i) => (
+            <div key={i} className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 28px', borderTop: '1px solid var(--line2)' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <b style={{ fontSize: 13.5, fontWeight: 550, display: 'block' }}>{a.title}</b>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>{a.sub}</span>
+              </div>
+              <button className="btn btn-dark btn-sm" onClick={() => onTicketAct(a.t)}>{a.cta}</button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="ov-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 3fr', gap: 20, animation: 'slideUp .35s ease both' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {heroCards.map((c, i) => (
             <div key={i} className="card" style={{ padding: '24px 28px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ fontSize: 13.5, fontWeight: 600 }}>{c.t}</div>
-              <div style={{ fontSize: 44, fontWeight: 600, letterSpacing: '-1.5px', margin: '8px 0 2px', fontVariantNumeric: 'tabular-nums', color: c.purple ? 'var(--purple)' : 'var(--ink)' }}>{c.n}</div>
+              <div style={{ fontSize: i === 0 ? 48 : 34, fontWeight: 600, letterSpacing: '-1.5px', margin: '8px 0 2px', fontVariantNumeric: 'tabular-nums', color: c.purple ? 'var(--purple)' : 'var(--ink)' }}>{c.n}</div>
               <div style={{ fontSize: 12, color: 'var(--muted)' }}>{c.sub}</div>
             </div>
           ))}
@@ -63,21 +83,6 @@ export function Overview({ userFirst, grade, gradePct, prios, costsAllowed, tick
           </div>
         </div>
       </div>
-
-      {attention.length > 0 && (
-        <div className="card" style={{ marginTop: 18, animation: 'slideUp .4s ease both' }}>
-          <div style={{ padding: '18px 28px 10px', fontSize: 13.5, fontWeight: 600 }}>Needs your attention</div>
-          {attention.map((a, i) => (
-            <div key={i} className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 28px', borderTop: '1px solid var(--line2)' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <b style={{ fontSize: 13.5, fontWeight: 550, display: 'block' }}>{a.title}</b>
-                <span style={{ fontSize: 12, color: 'var(--muted)' }}>{a.sub}</span>
-              </div>
-              <button className="btn btn-dark btn-sm" onClick={() => onTicketAct(a.t)}>{a.cta}</button>
-            </div>
-          ))}
-        </div>
-      )}
 
       <div style={{ marginTop: 18 }}>
         <ActivityFeed title="Handled by edgefi" items={ACTIVITY} />
@@ -148,7 +153,7 @@ export function Tickets({ tickets, onWizard, onTicketAct }) {
 const cell = (bold) => ({ padding: '17px 28px', borderBottom: '1px solid var(--line2)', fontSize: 13.5, fontWeight: bold ? 550 : 400 })
 
 /* ---------------------------------------------------------------- People */
-export function People({ people, search, setSearch, onManage, onOnboard }) {
+export function People({ people, search, setSearch, onManage, onOnboard, onRequestPatch, patched }) {
   const isMobile = useIsMobile()
   const q = search.trim().toLowerCase()
   const filtered = people.filter((p) => !q || `${p.name} ${p.role} ${p.email}`.toLowerCase().includes(q))
@@ -171,6 +176,13 @@ export function People({ people, search, setSearch, onManage, onOnboard }) {
               <div style={{ fontSize: 12, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isMobile ? p.role : `${p.role} · ${p.email}`}</div>
             </div>
             {!isMobile && <Status kind={p.sk}>{p.status}</Status>}
+            {/* C2 — fix the flag inline with the same verb the tech side uses */}
+            {p.sk === 'warn' && !patched.includes(p.name) && (
+              <button className="btn btn-dark btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={() => onRequestPatch(p.name)}>Request patch</button>
+            )}
+            {p.sk === 'warn' && patched.includes(p.name) && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: 'var(--ok)', whiteSpace: 'nowrap' }}>Requested ✓</span>
+            )}
             <button className="btn btn-ghost btn-sm" onClick={() => onManage(p)}>Manage</button>
           </div>
         ))}
@@ -231,7 +243,7 @@ export function Training({ training, nudged, onNudge }) {
       <ViewHeader title="Security Training" />
       <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="84%" label="Overall completion" />
-        <Stat n="3" label="Overdue" />
+        <Stat n="3" label="Overdue" color="var(--warn)" />
         <Stat n="12" label="Modules assigned" />
       </div>
       <Card title="People">

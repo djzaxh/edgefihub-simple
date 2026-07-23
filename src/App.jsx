@@ -64,6 +64,7 @@ export default function App() {
   const [search, setSearch] = useState('')
   const [nudged, setNudged] = useState([])
   const [reclaimed, setReclaimed] = useState([])
+  const [patched, setPatched] = useState([])
 
   // ---- settings state
   const [prios, setPrios] = useState(() => PRIOS.map((k) => ({ k, on: true })))
@@ -170,13 +171,13 @@ export default function App() {
   // ---- render current view
   const renderView = () => {
     switch (effNav) {
-      case 'overview': return <Overview userFirst={userFirst} grade={grade} gradePct={gradePct} prios={prios} costsAllowed={costsAllowed} tickets={tickets} onWizard={() => openWizard()} onTicketAct={setTicketAct} />
+      case 'overview': return <Overview userFirst={userFirst} grade={grade} gradePct={gradePct} prios={prios} costsAllowed={costsAllowed} tickets={tickets} onWizard={() => openWizard()} onTicketAct={setTicketAct} onCustomize={() => go('settings')} />
       case 'tickets': return <Tickets tickets={tickets} onWizard={() => openWizard()} onTicketAct={setTicketAct} />
-      case 'people': return <People people={people} search={search} setSearch={setSearch} onManage={setManage} onOnboard={() => openWizard({ step: 2, type: 'Onboard a user', title: 'Onboard a user — ' })} />
+      case 'people': return <People people={people} search={search} setSearch={setSearch} onManage={setManage} onOnboard={() => openWizard({ step: 2, type: 'Onboard a user', title: 'Onboard a user — ' })} patched={patched} onRequestPatch={(name) => { setPatched((x) => [...x, name]); toast(`Patch requested for ${name}`) }} />
       case 'security': return <Security grade={grade} gradePct={gradePct} onExport={() => toast("Security report export started — we'll email it to you")} />
       case 'training': return <Training training={TRAINING} nudged={nudged} onNudge={(n) => { setNudged((x) => [...x, n]); toast(`Reminder sent to ${n}`) }} />
       case 'costs': return costsAllowed ? <Costs reclaimed={reclaimed} onReclaim={reclaim} onReclaimAll={reclaimAll} /> : <Restricted />
-      case 'queue': return <Queue />
+      case 'queue': return <Queue onAction={(m) => toast(m)} />
       case 'customers': return <Customers onViewAs={(c) => { setImp({ name: c.admin, role: c.adminRole, company: c.name }); setNav('overview') }} />
       case 'remediation': return <Watchtower onFlag={(cta) => toast(`${cta} — queued`)} />
       case 'audit': return <Audit onExport={() => toast('Audit log export started — CSV will download')} />
@@ -214,9 +215,6 @@ export default function App() {
             {navLoading && <div style={{ height: 2, position: 'sticky', top: 0, zIndex: 5, overflow: 'hidden' }}><div style={{ position: 'absolute', top: 0, height: '100%', width: '35%', background: 'var(--purple)', animation: 'loadbar .5s ease-out infinite' }} /></div>}
             <div className="content" style={{ padding: '14px 16px calc(env(safe-area-inset-bottom) + 104px)' }}>{renderView()}</div>
           </main>
-
-          {/* content fades into the safe area / behind Safari chrome (native continuity) */}
-          <div className="bottom-scrim" aria-hidden="true" />
 
           {/* the single bar — floating glass pill */}
           <BottomNav items={primaryTabs} effNav={effNav} onGo={go} onMore={() => setMoreOpen(true)} moreActive={moreActive} />
@@ -324,44 +322,63 @@ function BottomNav({ items, effNav, onGo, onMore, moreActive }) {
   const activeIndex = Math.max(0, tabs.findIndex((t) => t.active))
   const pct = 100 / n
   const trackRef = useRef(null)
-  const drag = useRef({ active: false })
-  const [dragLeft, setDragLeft] = useState(null) // px while dragging, else null
+  // one gesture, two axes: horizontal slides the selector between tabs,
+  // vertical drags the whole bar with the finger (rubber-band, snaps back).
+  const g = useRef({ active: false, mode: null })
+  const [dragLeft, setDragLeft] = useState(null) // selector px while sliding, else null
+  const [dragY, setDragY] = useState(0)           // bar offset px while lifting, else 0
+  const [vDrag, setVDrag] = useState(false)       // true while the bar is being lifted
   const suppressClick = useRef(false)
+
+  // follow the finger 1:1 up to 130px, then resist — the bar feels attached but tethered
+  const rubber = (v) => { const s = Math.sign(v), a = Math.abs(v), max = 130; return s * (a < max ? a : max + (a - max) * 0.35) }
 
   const down = (e) => {
     const rect = trackRef.current.getBoundingClientRect()
-    drag.current = { active: true, start: e.clientX, left: rect.left, width: rect.width, tw: rect.width / n, moved: false }
+    g.current = { active: true, mode: null, sx: e.clientX, sy: e.clientY, left: rect.left, width: rect.width, tw: rect.width / n, moved: false }
     try { e.currentTarget.setPointerCapture(e.pointerId) } catch (_) {}
   }
   const move = (e) => {
-    const d = drag.current
+    const d = g.current
     if (!d.active) return
-    if (d.moved || Math.abs(e.clientX - d.start) > 6) {
+    const dx = e.clientX - d.sx, dy = e.clientY - d.sy
+    if (!d.mode) {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return
+      d.mode = Math.abs(dy) > Math.abs(dx) ? 'v' : 'h'
       d.moved = true
+      if (d.mode === 'v') setVDrag(true)
+    }
+    if (d.mode === 'h') {
       let x = e.clientX - d.left - d.tw / 2
       x = Math.max(0, Math.min(x, d.width - d.tw))
       setDragLeft(x)
+    } else {
+      setDragY(rubber(dy))
     }
   }
   const up = () => {
-    const d = drag.current
+    const d = g.current
     if (!d.active) return
     d.active = false
-    if (d.moved && dragLeft != null) {
+    if (d.mode === 'h' && dragLeft != null) {
       const idx = Math.max(0, Math.min(Math.round(dragLeft / d.tw), n - 1))
-      suppressClick.current = true
-      setTimeout(() => { suppressClick.current = false }, 60)
       if (!tabs[idx].active) tabs[idx].onClick()
     }
+    if (d.moved) { suppressClick.current = true; setTimeout(() => { suppressClick.current = false }, 60) }
     setDragLeft(null)
+    setDragY(0)   // spring back to rest
+    setVDrag(false)
+    g.current.mode = null
   }
 
   const selStyle = dragLeft != null
-    ? { left: dragLeft, width: `${drag.current.tw}px`, transition: 'none' }
+    ? { left: dragLeft, width: `${g.current.tw}px`, transition: 'none' }
     : { left: `${activeIndex * pct}%`, width: `${pct}%`, transition: 'left .38s cubic-bezier(.34,1.35,.5,1)' }
 
   return (
-    <nav className="tabbar-float" style={{ position: 'fixed', left: 14, right: 14, bottom: 'calc(env(safe-area-inset-bottom) + 12px)', zIndex: 90, padding: 6, borderRadius: 34 }}
+    <nav className="tabbar-float" style={{ position: 'fixed', left: 14, right: 14, bottom: 'calc(env(safe-area-inset-bottom) + 12px)', zIndex: 90, padding: 6, borderRadius: 34,
+      transform: dragY ? `translateY(${dragY}px)` : undefined,
+      transition: vDrag ? 'none' : 'transform .42s cubic-bezier(.34,1.4,.5,1)' }}
       onClickCapture={(e) => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation() } }}>
       <div ref={trackRef} style={{ position: 'relative', display: 'flex', alignItems: 'stretch', touchAction: 'none' }}
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>

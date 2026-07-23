@@ -280,15 +280,6 @@ body.dark .glass-selector {
   }
 }
 
-/* soft scrim at the very bottom of the mobile viewport: content fades into the
-   safe area / behind Safari's chrome so the page reads continuous, not cut off */
-.bottom-scrim {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
-  height: calc(env(safe-area-inset-bottom) + 96px);
-  pointer-events: none;
-  background: linear-gradient(to bottom, transparent, var(--bg) 62%);
-}
-
 /* keyboard focus ring — ink, per brand */
 :focus-visible {
   outline: 2px solid var(--ink);
