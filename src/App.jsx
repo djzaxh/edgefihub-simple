@@ -6,7 +6,6 @@ import { Sun, Moon, Help as HelpIcon, Gear, Eye, Check, Dots, Warn, Home, Ticket
 import { Overview, Tickets, People, Devices, Security, Training, Costs } from './views/ClientViews.jsx'
 import { Queue, Customers, Watchtower, Audit, Workflows, Integrations, Capabilities } from './views/TechViews.jsx'
 import { KB, KBArticle, Settings } from './views/Help.jsx'
-import DashboardHome from './views/DashboardHome.jsx'
 import { Wizard, Manage, Offboard, TicketAction, NewClient } from './components/Modals.jsx'
 import Sheet from './components/Sheet.jsx'
 import { useIsMobile } from './components/ui.jsx'
@@ -109,11 +108,10 @@ export default function App() {
   // per-role page permissions: each client role only sees what's relevant to it
   const allowedPages = clientMode ? (ROLE_PAGES[effRole] || CLIENT_KEYS) : TECH_KEYS
   const modeKeys = allowedPages
-  const ALWAYS = ['dashboard', 'kb', 'kbArticle', 'settings'] // reachable in any role
+  const ALWAYS = ['kb', 'kbArticle', 'settings'] // help + settings reachable in any role
   const home = clientMode ? (effRole === 'HR' ? 'people' : 'overview') : 'queue'
-  const landing = isMobile ? home : 'dashboard' // desktop lands on the dashboard shell; mobile keeps its home
-  const rawNav = nav || landing
-  const effNav = ALWAYS.includes(rawNav) || allowedPages.includes(rawNav) ? rawNav : landing
+  const rawNav = nav || home
+  const effNav = ALWAYS.includes(rawNav) || allowedPages.includes(rawNav) ? rawNav : home
 
   // reset transient route bits when persona OR role changes (a hidden page falls back)
   useEffect(() => { setNav(null); setSearch('') }, [workspace, imp, role])
@@ -180,7 +178,6 @@ export default function App() {
   const renderView = () => {
     switch (effNav) {
       case 'overview': return <Overview userFirst={userFirst} grade={grade} gradePct={gradePct} prios={prios} costsAllowed={costsAllowed} tickets={tickets} onWizard={() => openWizard()} onTicketAct={setTicketAct} onCustomize={() => go('settings')} />
-      case 'dashboard': return <DashboardHome groups={groups} go={go} clientMode={clientMode} userFirst={userFirst} onWizard={() => openWizard()} onNewClient={() => setNewClient(true)} />
       case 'tickets': return <Tickets tickets={tickets} onWizard={() => openWizard()} onTicketAct={setTicketAct} />
       case 'people': return <People people={people} search={search} setSearch={setSearch} onManage={setManage} onOnboard={() => openWizard({ step: 2, type: 'Onboard a user', title: 'Onboard a user — ' })} patched={patched} onRequestPatch={(name) => { setPatched((x) => [...x, name]); toast(`Patch requested for ${name}`) }} />
       case 'devices': return <Devices onRequest={() => openWizard({ step: 2, type: 'New device', title: 'New device — ' })} />
@@ -248,56 +245,21 @@ export default function App() {
         </>
       ) : (
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-        {/* glass top nav */}
-        <header className="glass" style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', alignItems: 'center', gap: 16, padding: '0 22px', height: 62, borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
-          <button onClick={() => go('dashboard')} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink)', padding: 0 }}>
-            {logoMark}
-            <b style={{ fontSize: 17, letterSpacing: '-0.2px', fontWeight: 500 }}>edgefi <span style={{ fontWeight: 700 }}>hub</span></b>
-          </button>
-          {!imp && (
-            <nav style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 6 }}>
-              {[['Technician', 'Team'], ['Client', 'Client']].map(([w, label]) => (
-                <button key={w} onClick={() => setWorkspace(w)} style={{ padding: '5px 10px', fontSize: 14, borderRadius: 8, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', color: workspace === w ? 'var(--ink)' : 'var(--faint)', fontWeight: workspace === w ? 600 : 500 }}>{label}</button>
-              ))}
-            </nav>
-          )}
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '0 10px' }}>
-            <div className="glass-soft" style={{ width: '100%', maxWidth: 440, display: 'flex', alignItems: 'center', gap: 10, height: 40, padding: '0 15px', borderRadius: 999, border: '1px solid var(--line)' }}>
-              <span style={{ color: 'var(--faint)', display: 'grid' }}><Search size={16} /></span>
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search hub…" style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: 13.5, color: 'var(--ink)', fontFamily: 'inherit' }} />
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <button className="iconbtn" onClick={() => setDark((d) => !d)} aria-label="Toggle theme">{dark ? <Sun /> : <Moon />}</button>
-            <button className={`iconbtn${effNav === 'kb' || effNav === 'kbArticle' ? ' active' : ''}`} onClick={() => go('kb')} aria-label="Help"><HelpIcon /></button>
-            <button className={`iconbtn${effNav === 'settings' ? ' active' : ''}`} onClick={() => go('settings')} aria-label="Settings"><Gear /></button>
-            <div style={{ position: 'relative' }}>
-              <button onClick={() => setDemoOpen((o) => !o)} aria-label="Account and demo controls" style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--line)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 600, color: 'var(--ink2)', border: 'none', cursor: 'pointer', marginLeft: 4 }}>{initials(userName)}</button>
-              {demoOpen && (
-                <>
-                  <div onClick={() => setDemoOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
-                  <div className="glass" style={{ position: 'absolute', right: 0, top: 42, width: 244, padding: 16, borderRadius: 16, border: '1px solid var(--line)', boxShadow: '0 16px 44px rgba(10,10,10,.20)', zIndex: 41 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{userName}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--muted)', marginBottom: 14, letterSpacing: '.02em' }}>Demo · view as</div>
-                    <PersonaControls {...{ workspace, setWorkspace, role, setRole, grade, setGrade, imp, clientMode }} />
-                    {imp && <button onClick={() => { setImp(null); setNav('customers'); setDemoOpen(false) }} className="btn btn-dark btn-sm" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }}>Exit “view as”</button>}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </header>
+        {/* floating glass selector pill — top */}
+        <TopNav items={allowedPages} effNav={effNav} onGo={go} logoMark={logoMark}
+          dark={dark} setDark={setDark} userName={userName} imp={imp}
+          demoOpen={demoOpen} setDemoOpen={setDemoOpen}
+          personaProps={{ workspace, setWorkspace, role, setRole, grade, setGrade, imp, clientMode }}
+          onExitImp={() => { setImp(null); setNav('customers'); setDemoOpen(false) }} />
 
-        {/* body */}
+        {/* body — the real page views, unchanged */}
         <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', position: 'relative', background: 'var(--bg)' }}>
           {navLoading && (
             <div style={{ height: 2, position: 'sticky', top: 0, zIndex: 10, overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, height: '100%', width: '35%', background: 'var(--purple)', animation: 'loadbar .5s ease-out infinite' }} />
             </div>
           )}
-          {effNav === 'dashboard'
-            ? renderView()
-            : <div className="content" style={{ maxWidth: 1180, margin: '0 auto', padding: '30px 40px 48px' }}>{renderView()}</div>}
+          <div className="content" style={{ maxWidth: 1180, margin: '0 auto', padding: '18px 40px 48px' }}>{renderView()}</div>
         </main>
       </div>
       )}
@@ -330,6 +292,58 @@ export default function App() {
 /* -------- Restricted (costs without permission) -------- */
 function Restricted() {
   return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>This section is available to Owner and CFO roles.</div>
+}
+
+/* -------- Desktop floating top nav — the mobile glass pill + liquid-glass sliding
+   selector, moved to the top; logo left, actions right, the real views below -------- */
+function TopNav({ items, effNav, onGo, logoMark, dark, setDark, userName, imp, demoOpen, setDemoOpen, personaProps, onExitImp }) {
+  const btnRefs = useRef({})
+  const [sel, setSel] = useState(null)
+  useEffect(() => {
+    const el = btnRefs.current[effNav]
+    setSel(el ? { left: el.offsetLeft, width: el.offsetWidth } : null)
+  }, [effNav, items.join(',')])
+  return (
+    <div style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
+      <button onClick={() => onGo(items[0])} style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink)', padding: '0 4px', flexShrink: 0 }}>
+        {logoMark}
+        <b style={{ fontSize: 16, letterSpacing: '-.2px', fontWeight: 500 }}>edgefi <span style={{ fontWeight: 700 }}>hub</span></b>
+      </button>
+      {/* the floating glass selector pill */}
+      <nav className="glass" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 2, padding: 5, borderRadius: 999, border: '1px solid var(--line)', boxShadow: '0 10px 30px rgba(10,10,10,.10)', flexShrink: 1, minWidth: 0 }}>
+        {sel && <div className="glass-selector" style={{ position: 'absolute', top: 5, bottom: 5, left: sel.left, width: sel.width, borderRadius: 999, zIndex: 0, transition: 'left .38s cubic-bezier(.34,1.35,.5,1), width .38s cubic-bezier(.34,1.35,.5,1)' }} />}
+        {items.map((k) => {
+          const active = effNav === k
+          return (
+            <button key={k} ref={(el) => { btnRefs.current[k] = el }} onClick={() => onGo(k)}
+              style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 15px', borderRadius: 999, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, whiteSpace: 'nowrap', color: active ? 'var(--ink)' : 'var(--muted)', fontWeight: active ? 600 : 500, transition: 'color .2s ease' }}>
+              {NAV[k]}
+              {BADGES[k] && <span style={{ fontSize: 10.5, fontWeight: 600, color: active ? 'var(--ink2)' : 'var(--faint)', fontVariantNumeric: 'tabular-nums' }}>{BADGES[k]}</span>}
+            </button>
+          )
+        })}
+      </nav>
+      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        <button className="iconbtn" onClick={() => setDark((d) => !d)} aria-label="Toggle theme">{dark ? <Sun /> : <Moon />}</button>
+        <button className={`iconbtn${effNav === 'kb' || effNav === 'kbArticle' ? ' active' : ''}`} onClick={() => onGo('kb')} aria-label="Help"><HelpIcon /></button>
+        <button className={`iconbtn${effNav === 'settings' ? ' active' : ''}`} onClick={() => onGo('settings')} aria-label="Settings"><Gear /></button>
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setDemoOpen((o) => !o)} aria-label="Account and demo controls" style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--line)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 600, color: 'var(--ink2)', border: 'none', cursor: 'pointer', marginLeft: 2 }}>{initials(userName)}</button>
+          {demoOpen && (
+            <>
+              <div onClick={() => setDemoOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+              <div className="glass" style={{ position: 'absolute', right: 0, top: 42, width: 244, padding: 16, borderRadius: 16, border: '1px solid var(--line)', boxShadow: '0 16px 44px rgba(10,10,10,.20)', zIndex: 41 }}>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{userName}</div>
+                <div style={{ fontSize: 11.5, color: 'var(--muted)', marginBottom: 14, letterSpacing: '.02em' }}>Demo · view as</div>
+                <PersonaControls {...personaProps} />
+                {imp && <button onClick={onExitImp} className="btn btn-dark btn-sm" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }}>Exit “view as”</button>}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 /* -------- Mobile bottom nav — a floating glass pill with a liquid-glass
