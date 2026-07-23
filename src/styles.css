@@ -89,11 +89,13 @@ body {
   overscroll-behavior-y: none;
 }
 
-/* App shell fills the *visible* viewport. 100dvh tracks Safari's shrinking/growing
-   chrome so the bottom tab bar is never hidden behind the toolbar or home bar. */
+/* App shell fills the *whole* screen, edge to edge, so the page (background +
+   scrollable content) runs all the way to the bottom behind Safari's chrome
+   rather than stopping at the toolbar. The floating tab bar is position:fixed
+   and anchors to the safe-area inset, so it stays above the chrome on its own. */
 .app-root {
   height: 100vh;                 /* fallback */
-  height: 100dvh;
+  height: 100lvh;                /* largest viewport — full screen */
 }
 
 a { color: var(--ink); text-decoration: none; }
