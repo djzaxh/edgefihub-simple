@@ -5,13 +5,14 @@
 
 :root,
 body {
-  --bg: #F5F5F5;
-  --surface: #FFFFFF;
-  --soft: #F5F5F5;
-  --soft2: #FAFAFA;
-  --line: #E9E9E9;
-  --line2: #F1F1F1;
-  --line-strong: #DDDDDD;
+  --bg: #FFFFFF;        /* canvas = light white */
+  --surface: #ECECEC;   /* cards / tables / nav = soft gray */
+  --soft: #E2E2E2;
+  --soft2: #F4F4F4;
+  --line: #DDDDDD;
+  --line2: #E6E6E6;
+  --line-strong: #CFCFCF;
+  --dot: rgba(10, 10, 10, 0.05);  /* subtle background texture */
   --ink: #0A0A0A;
   --ink2: #404040;
   --muted: #6B6B6B;
@@ -62,6 +63,7 @@ body.dark, html.dark {
   --danger-line: rgba(242, 109, 95, 0.4);
   --edge: #64C2E0;
   --edge-bg: rgba(100, 194, 224, 0.13);
+  --dot: rgba(255, 255, 255, 0.05);
   color-scheme: dark;
 }
 

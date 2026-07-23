@@ -253,8 +253,8 @@ export default function App() {
           onExitImp={() => { setImp(null); setNav('customers'); setDemoOpen(false) }} />
 
         {/* body — real page views, full width + responsive */}
-        <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', position: 'relative', background: 'var(--bg)' }}>
-          <div className="content" style={{ padding: '20px clamp(16px, 3.5vw, 46px) 64px' }}>{renderView()}</div>
+        <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', position: 'relative', background: 'var(--bg)', backgroundImage: 'radial-gradient(circle, var(--dot) 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
+          <div className="content" style={{ padding: '30px clamp(20px, 4vw, 72px) 88px' }}>{renderView()}</div>
         </main>
         {/* nav loading — anchored to the bottom of the page */}
         {navLoading && (
@@ -305,6 +305,38 @@ function TopNav({ items, effNav, onGo, logoMark, dark, setDark, userName, imp, d
     const el = btnRefs.current[effNav]
     setSel(el ? { left: el.offsetLeft, width: el.offsetWidth } : null)
   }, [effNav, items.join(',')])
+  // drag the glass selector between tabs (same feel as the mobile bar); tap still navigates
+  const trackRef = useRef(null)
+  const drag = useRef({ active: false })
+  const [dragLeft, setDragLeft] = useState(null)
+  const suppressClick = useRef(false)
+  const selW = sel ? sel.width : 60
+  const down = (e) => { drag.current = { active: true, startX: e.clientX, moved: false }; try { e.currentTarget.setPointerCapture(e.pointerId) } catch (_) {} }
+  const move = (e) => {
+    const d = drag.current
+    if (!d.active) return
+    if (d.moved || Math.abs(e.clientX - d.startX) > 5) {
+      d.moved = true
+      const tr = trackRef.current, rect = tr.getBoundingClientRect()
+      let x = (e.clientX - rect.left) + tr.scrollLeft - selW / 2
+      x = Math.max(0, Math.min(x, tr.scrollWidth - selW))
+      setDragLeft(x)
+    }
+  }
+  const up = () => {
+    const d = drag.current
+    if (!d.active) return
+    d.active = false
+    if (d.moved && dragLeft != null) {
+      const center = dragLeft + selW / 2
+      let best = null, bestDist = Infinity
+      for (const k of items) { const el = btnRefs.current[k]; if (!el) continue; const c = el.offsetLeft + el.offsetWidth / 2; const dist = Math.abs(c - center); if (dist < bestDist) { bestDist = dist; best = k } }
+      suppressClick.current = true
+      setTimeout(() => { suppressClick.current = false }, 60)
+      if (best && best !== effNav) onGo(best)
+    }
+    setDragLeft(null)
+  }
   const divider = <span style={{ width: 1, height: 22, background: 'var(--line)', flexShrink: 0 }} />
   return (
     <div style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', justifyContent: 'center', padding: '14px 16px', pointerEvents: 'none' }}>
@@ -316,8 +348,11 @@ function TopNav({ items, effNav, onGo, logoMark, dark, setDark, userName, imp, d
         </button>
         {divider}
         {/* tabs track (scroll-aware sliding selector) */}
-        <div onScroll={(e) => setScrollX(e.currentTarget.scrollLeft)} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 2, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {sel && <div className="glass-selector" style={{ position: 'absolute', top: 2, bottom: 2, left: sel.left - scrollX, width: sel.width, borderRadius: 999, zIndex: 0, transition: 'left .38s cubic-bezier(.34,1.35,.5,1), width .38s cubic-bezier(.34,1.35,.5,1)' }} />}
+        <div ref={trackRef} onScroll={(e) => setScrollX(e.currentTarget.scrollLeft)}
+          onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
+          onClickCapture={(e) => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation() } }}
+          style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 2, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', touchAction: 'none' }}>
+          {sel && <div className="glass-selector" style={{ position: 'absolute', top: 2, bottom: 2, left: (dragLeft != null ? dragLeft : sel.left) - scrollX, width: selW, borderRadius: 999, zIndex: 0, cursor: 'grab', transition: dragLeft != null ? 'none' : 'left .38s cubic-bezier(.34,1.35,.5,1), width .38s cubic-bezier(.34,1.35,.5,1)' }} />}
           {items.map((k) => {
             const active = effNav === k
             return (
