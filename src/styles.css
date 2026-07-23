@@ -190,7 +190,7 @@ tbody tr:hover { background: var(--soft2); }
 
 /* sidebar nav items read as buttons: hover fills a soft background, active is
    shown by weight (no underline) */
-.navbtn { background: none; border-radius: 8px; transition: background .14s ease; }
+.navbtn { background: none; border-radius: 10px; transition: background .14s ease; }
 .navbtn:hover { background: var(--line); }        /* --soft equals the sidebar bg, so it was invisible */
 .navbtn.active { background: var(--line); }
 

@@ -25,8 +25,10 @@ export default function middleware(request) {
     if (u === USER && p === PASS) return // authorized — continue to the app
   }
 
+  // realm must be ASCII — a non-ASCII char here (e.g. an em-dash) makes browsers
+  // drop the header and skip the native login prompt
   return new Response('Authentication required.', {
     status: 401,
-    headers: { 'WWW-Authenticate': 'Basic realm="edgefi hub — private preview", charset="UTF-8"' },
+    headers: { 'WWW-Authenticate': 'Basic realm="edgefi hub"' },
   })
 }
