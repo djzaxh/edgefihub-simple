@@ -2,10 +2,11 @@ import React, { useEffect, useRef, useState } from 'react'
 import {
   NAV, BADGES, CLIENT_KEYS, TECH_KEYS, GRADE_PCT, TICKETS, PEOPLE, PRIOS, TRAINING, LICENSES, initials, firstName,
 } from './data.js'
-import { Sun, Moon, Help as HelpIcon, Gear, Eye, Check, Dots, Warn, Home, Ticket, Users, Shield, GradCap, CreditCard, Layers, Building, Clipboard, Laptop, Plug, Toggle, Flow } from './icons.jsx'
+import { Sun, Moon, Help as HelpIcon, Gear, Eye, Check, Dots, Warn, Home, Ticket, Users, Shield, GradCap, CreditCard, Layers, Building, Clipboard, Laptop, Plug, Toggle, Flow, Search } from './icons.jsx'
 import { Overview, Tickets, People, Devices, Security, Training, Costs } from './views/ClientViews.jsx'
 import { Queue, Customers, Watchtower, Audit, Workflows, Integrations, Capabilities } from './views/TechViews.jsx'
 import { KB, KBArticle, Settings } from './views/Help.jsx'
+import DashboardHome from './views/DashboardHome.jsx'
 import { Wizard, Manage, Offboard, TicketAction, NewClient } from './components/Modals.jsx'
 import Sheet from './components/Sheet.jsx'
 import { useIsMobile } from './components/ui.jsx'
@@ -86,6 +87,7 @@ export default function App() {
   // ---- mobile
   const isMobile = useIsMobile()
   const [moreOpen, setMoreOpen] = useState(false)
+  const [demoOpen, setDemoOpen] = useState(false) // desktop account/persona popover
 
   // ---- toast — type drives a single accent glyph on the ink surface
   const [toastMsg, setToastMsg] = useState(null) // { m, type } | null
@@ -107,10 +109,11 @@ export default function App() {
   // per-role page permissions: each client role only sees what's relevant to it
   const allowedPages = clientMode ? (ROLE_PAGES[effRole] || CLIENT_KEYS) : TECH_KEYS
   const modeKeys = allowedPages
-  const ALWAYS = ['kb', 'kbArticle', 'settings'] // help + settings reachable in any role
+  const ALWAYS = ['dashboard', 'kb', 'kbArticle', 'settings'] // reachable in any role
   const home = clientMode ? (effRole === 'HR' ? 'people' : 'overview') : 'queue'
-  const rawNav = nav || home
-  const effNav = ALWAYS.includes(rawNav) || allowedPages.includes(rawNav) ? rawNav : home
+  const landing = isMobile ? home : 'dashboard' // desktop lands on the dashboard shell; mobile keeps its home
+  const rawNav = nav || landing
+  const effNav = ALWAYS.includes(rawNav) || allowedPages.includes(rawNav) ? rawNav : landing
 
   // reset transient route bits when persona OR role changes (a hidden page falls back)
   useEffect(() => { setNav(null); setSearch('') }, [workspace, imp, role])
@@ -177,6 +180,7 @@ export default function App() {
   const renderView = () => {
     switch (effNav) {
       case 'overview': return <Overview userFirst={userFirst} grade={grade} gradePct={gradePct} prios={prios} costsAllowed={costsAllowed} tickets={tickets} onWizard={() => openWizard()} onTicketAct={setTicketAct} onCustomize={() => go('settings')} />
+      case 'dashboard': return <DashboardHome groups={groups} go={go} clientMode={clientMode} userFirst={userFirst} onWizard={() => openWizard()} onNewClient={() => setNewClient(true)} />
       case 'tickets': return <Tickets tickets={tickets} onWizard={() => openWizard()} onTicketAct={setTicketAct} />
       case 'people': return <People people={people} search={search} setSearch={setSearch} onManage={setManage} onOnboard={() => openWizard({ step: 2, type: 'Onboard a user', title: 'Onboard a user — ' })} patched={patched} onRequestPatch={(name) => { setPatched((x) => [...x, name]); toast(`Patch requested for ${name}`) }} />
       case 'devices': return <Devices onRequest={() => openWizard({ step: 2, type: 'New device', title: 'New device — ' })} />
@@ -243,53 +247,57 @@ export default function App() {
           )}
         </>
       ) : (
-      <div style={{ display: 'flex', flex: 1, minHeight: 0, position: 'relative' }}>
-        {/* sidebar */}
-        <aside className="sidebar" style={{ width: 232, flexShrink: 0, display: 'flex', flexDirection: 'column', padding: '30px 24px 22px', height: '100%', boxSizing: 'border-box' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        {/* glass top nav */}
+        <header className="glass" style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', alignItems: 'center', gap: 16, padding: '0 22px', height: 62, borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
+          <button onClick={() => go('dashboard')} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink)', padding: 0 }}>
             {logoMark}
             <b style={{ fontSize: 17, letterSpacing: '-0.2px', fontWeight: 500 }}>edgefi <span style={{ fontWeight: 700 }}>hub</span></b>
-            <div style={{ flex: 1 }} />
-            <button className="iconbtn" onClick={() => setDark((d) => !d)} aria-label="Toggle theme">{dark ? <Sun /> : <Moon />}</button>
+          </button>
+          {!imp && (
+            <nav style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 6 }}>
+              {[['Technician', 'Team'], ['Client', 'Client']].map(([w, label]) => (
+                <button key={w} onClick={() => setWorkspace(w)} style={{ padding: '5px 10px', fontSize: 14, borderRadius: 8, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', color: workspace === w ? 'var(--ink)' : 'var(--faint)', fontWeight: workspace === w ? 600 : 500 }}>{label}</button>
+              ))}
+            </nav>
+          )}
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '0 10px' }}>
+            <div className="glass-soft" style={{ width: '100%', maxWidth: 440, display: 'flex', alignItems: 'center', gap: 10, height: 40, padding: '0 15px', borderRadius: 999, border: '1px solid var(--line)' }}>
+              <span style={{ color: 'var(--faint)', display: 'grid' }}><Search size={16} /></span>
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search hub…" style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: 13.5, color: 'var(--ink)', fontFamily: 'inherit' }} />
+            </div>
           </div>
-
-          <nav style={{ marginTop: 30, display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto' }}>
-            {groups.map((g) => (
-              <div key={g.id} style={{ display: 'flex', flexDirection: 'column', gap: 1, marginBottom: 30 }}>
-                {g.items.map((k) => {
-                  const sel = effNav === k
-                  return (
-                    <button key={k} onClick={() => go(k)} className={`navbtn${sel ? ' active' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', margin: '0 -12px', border: 'none', cursor: 'pointer', fontSize: 13.5, textAlign: 'left', color: 'var(--ink)' }}>
-                      <span style={{ flex: 1, fontWeight: sel ? 600 : 450, color: sel ? 'var(--ink)' : 'var(--ink2)' }}>{NAV[k]}</span>
-                      {BADGES[k] && <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--faint)', fontVariantNumeric: 'tabular-nums' }}>{BADGES[k]}</span>}
-                    </button>
-                  )
-                })}
-              </div>
-            ))}
-          </nav>
-
-          {/* demo persona controls */}
-          <PersonaControls {...{ workspace, setWorkspace, role, setRole, grade, setGrade, imp, clientMode }} />
-
-          <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--line)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 600, color: 'var(--ink2)', flexShrink: 0 }}>{initials(userName)}</div>
-            <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 550, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{userName}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button className="iconbtn" onClick={() => setDark((d) => !d)} aria-label="Toggle theme">{dark ? <Sun /> : <Moon />}</button>
             <button className={`iconbtn${effNav === 'kb' || effNav === 'kbArticle' ? ' active' : ''}`} onClick={() => go('kb')} aria-label="Help"><HelpIcon /></button>
             <button className={`iconbtn${effNav === 'settings' ? ' active' : ''}`} onClick={() => go('settings')} aria-label="Settings"><Gear /></button>
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setDemoOpen((o) => !o)} aria-label="Account and demo controls" style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--line)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 600, color: 'var(--ink2)', border: 'none', cursor: 'pointer', marginLeft: 4 }}>{initials(userName)}</button>
+              {demoOpen && (
+                <>
+                  <div onClick={() => setDemoOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+                  <div className="glass" style={{ position: 'absolute', right: 0, top: 42, width: 244, padding: 16, borderRadius: 16, border: '1px solid var(--line)', boxShadow: '0 16px 44px rgba(10,10,10,.20)', zIndex: 41 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{userName}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--muted)', marginBottom: 14, letterSpacing: '.02em' }}>Demo · view as</div>
+                    <PersonaControls {...{ workspace, setWorkspace, role, setRole, grade, setGrade, imp, clientMode }} />
+                    {imp && <button onClick={() => { setImp(null); setNav('customers'); setDemoOpen(false) }} className="btn btn-dark btn-sm" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }}>Exit “view as”</button>}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </aside>
+        </header>
 
-        {/* main card */}
-        <main style={{ flex: 1, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 14, margin: '12px 12px 12px 0', overflow: 'hidden', position: 'relative' }}>
+        {/* body */}
+        <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', position: 'relative', background: 'var(--bg)' }}>
           {navLoading && (
-            <div style={{ height: 2, position: 'absolute', top: 0, left: 0, right: 0, zIndex: 5, overflow: 'hidden' }}>
+            <div style={{ height: 2, position: 'sticky', top: 0, zIndex: 10, overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, height: '100%', width: '35%', background: 'var(--purple)', animation: 'loadbar .5s ease-out infinite' }} />
             </div>
           )}
-          <div className="content" style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '30px 38px 44px' }}>
-            {renderView()}
-          </div>
+          {effNav === 'dashboard'
+            ? renderView()
+            : <div className="content" style={{ maxWidth: 1180, margin: '0 auto', padding: '30px 40px 48px' }}>{renderView()}</div>}
         </main>
       </div>
       )}
