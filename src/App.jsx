@@ -211,7 +211,7 @@ export default function App() {
               title (iOS large-title feel), status bar cleared via safe-area inset */}
           <main style={{ flex: 1, minHeight: 0, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', position: 'relative', background: 'var(--bg)', paddingTop: 'env(safe-area-inset-top)' }}>
             {navLoading && <div style={{ height: 2, position: 'sticky', top: 0, zIndex: 5, overflow: 'hidden' }}><div style={{ position: 'absolute', top: 0, height: '100%', width: '35%', background: 'var(--purple)', animation: 'loadbar .5s ease-out infinite' }} /></div>}
-            <div className="content" style={{ padding: '14px 16px 22px' }}>{renderView()}</div>
+            <div className="content" style={{ padding: '14px 16px calc(env(safe-area-inset-bottom) + 104px)' }}>{renderView()}</div>
           </main>
 
           {/* the single bar — bottom tab nav, fills the home-indicator area so there's no color seam */}
@@ -261,8 +261,8 @@ export default function App() {
           <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--line)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 600, color: 'var(--ink2)', flexShrink: 0 }}>{initials(userName)}</div>
             <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 550, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{userName}</div>
-            <button className="iconbtn" onClick={() => go('kb')} aria-label="Help"><HelpIcon /></button>
-            <button className="iconbtn" onClick={() => go('settings')} aria-label="Settings"><Gear /></button>
+            <button className={`iconbtn${effNav === 'kb' || effNav === 'kbArticle' ? ' active' : ''}`} onClick={() => go('kb')} aria-label="Help"><HelpIcon /></button>
+            <button className={`iconbtn${effNav === 'settings' ? ' active' : ''}`} onClick={() => go('settings')} aria-label="Settings"><Gear /></button>
           </div>
         </aside>
 
@@ -309,28 +309,22 @@ function Restricted() {
   return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>This section is available to Owner and CFO roles.</div>
 }
 
-/* -------- Mobile bottom tab bar (the single bar) -------- */
+/* -------- Mobile bottom nav — a floating island that sits on the page bg
+   (margins all around → no full-width bar meeting a different-colored safe area) -------- */
 function BottomNav({ items, effNav, onGo, onMore, moreActive }) {
-  const tab = (active) => ({ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '9px 4px 7px', minHeight: 54, background: 'none', border: 'none', cursor: 'pointer', color: active ? 'var(--ink)' : 'var(--faint)', minWidth: 0 })
-  const label = (active) => ({ fontSize: 10.5, fontWeight: active ? 600 : 500, letterSpacing: '.01em' })
+  const tabs = [
+    ...items.map((k) => ({ k, Icon: NAV_ICONS[k] || Home, label: NAV_SHORT[k], active: effNav === k, onClick: () => onGo(k) })),
+    { k: '__more', Icon: Dots, label: 'More', active: moreActive, onClick: onMore },
+  ]
   return (
-    // .tabbar handles the translucent blur; padding-bottom fills the home-indicator
-    // area with the SAME surface so there's no color seam under the bar
-    <nav className="tabbar" style={{ display: 'flex', borderTop: '1px solid var(--line)', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      {items.map((k) => {
-        const Icon = NAV_ICONS[k] || Home
-        const active = effNav === k
-        return (
-          <button key={k} style={tab(active)} onClick={() => onGo(k)} aria-label={NAV_SHORT[k]}>
-            <Icon size={21} />
-            <span style={label(active)}>{NAV_SHORT[k]}</span>
-          </button>
-        )
-      })}
-      <button style={tab(moreActive)} onClick={onMore} aria-label="More">
-        <Dots size={21} />
-        <span style={label(moreActive)}>More</span>
-      </button>
+    <nav className="tabbar-float" style={{ position: 'fixed', left: 14, right: 14, bottom: 'calc(env(safe-area-inset-bottom) + 12px)', zIndex: 90, display: 'flex', alignItems: 'stretch', padding: '5px 6px', borderRadius: 26 }}>
+      {tabs.map(({ k, Icon, label, active, onClick }) => (
+        <button key={k} onClick={onClick} aria-label={label}
+          style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 2px', border: 'none', cursor: 'pointer', borderRadius: 18, color: active ? 'var(--ink)' : 'var(--faint)', background: active ? 'var(--soft)' : 'transparent', transition: 'background .18s ease, color .18s ease' }}>
+          <Icon size={20} />
+          <span style={{ fontSize: 10, fontWeight: active ? 600 : 500, letterSpacing: '.01em' }}>{label}</span>
+        </button>
+      ))}
     </nav>
   )
 }
@@ -341,7 +335,7 @@ function DemoFab({ dark, setDark, imp, onExitImp, personaProps }) {
   return (
     <>
       {open && <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 96 }} />}
-      <div style={{ position: 'fixed', right: 16, bottom: 'calc(env(safe-area-inset-bottom) + 72px)', zIndex: 97, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12 }}>
+      <div style={{ position: 'fixed', right: 16, bottom: 'calc(env(safe-area-inset-bottom) + 96px)', zIndex: 97, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12 }}>
         {open && (
           <div style={{ width: 232, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, boxShadow: '0 16px 44px rgba(10,10,10,.28)', padding: '14px 16px', animation: 'rise .2s cubic-bezier(.2,.8,.2,1) both' }}>
             <PersonaControls {...personaProps} />
