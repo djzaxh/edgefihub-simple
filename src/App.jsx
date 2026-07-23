@@ -252,15 +252,16 @@ export default function App() {
           personaProps={{ workspace, setWorkspace, role, setRole, grade, setGrade, imp, clientMode }}
           onExitImp={() => { setImp(null); setNav('customers'); setDemoOpen(false) }} />
 
-        {/* body — the real page views, unchanged */}
+        {/* body — real page views, full width + responsive */}
         <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', position: 'relative', background: 'var(--bg)' }}>
-          {navLoading && (
-            <div style={{ height: 2, position: 'sticky', top: 0, zIndex: 10, overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, height: '100%', width: '35%', background: 'var(--purple)', animation: 'loadbar .5s ease-out infinite' }} />
-            </div>
-          )}
-          <div className="content" style={{ maxWidth: 1180, margin: '0 auto', padding: '18px 40px 48px' }}>{renderView()}</div>
+          <div className="content" style={{ padding: '20px clamp(16px, 3.5vw, 46px) 64px' }}>{renderView()}</div>
         </main>
+        {/* nav loading — anchored to the bottom of the page */}
+        {navLoading && (
+          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 2, zIndex: 200, overflow: 'hidden', pointerEvents: 'none' }}>
+            <div style={{ position: 'absolute', top: 0, height: '100%', width: '35%', background: 'var(--purple)', animation: 'loadbar .5s ease-out infinite' }} />
+          </div>
+        )}
       </div>
       )}
 
@@ -299,49 +300,60 @@ function Restricted() {
 function TopNav({ items, effNav, onGo, logoMark, dark, setDark, userName, imp, demoOpen, setDemoOpen, personaProps, onExitImp }) {
   const btnRefs = useRef({})
   const [sel, setSel] = useState(null)
+  const [scrollX, setScrollX] = useState(0)
   useEffect(() => {
     const el = btnRefs.current[effNav]
     setSel(el ? { left: el.offsetLeft, width: el.offsetWidth } : null)
   }, [effNav, items.join(',')])
+  const divider = <span style={{ width: 1, height: 22, background: 'var(--line)', flexShrink: 0 }} />
   return (
-    <div style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
-      <button onClick={() => onGo(items[0])} style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink)', padding: '0 4px', flexShrink: 0 }}>
-        {logoMark}
-        <b style={{ fontSize: 16, letterSpacing: '-.2px', fontWeight: 500 }}>edgefi <span style={{ fontWeight: 700 }}>hub</span></b>
-      </button>
-      {/* the floating glass selector pill */}
-      <nav className="glass" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 2, padding: 5, borderRadius: 999, border: '1px solid var(--line)', boxShadow: '0 10px 30px rgba(10,10,10,.10)', flexShrink: 1, minWidth: 0 }}>
-        {sel && <div className="glass-selector" style={{ position: 'absolute', top: 5, bottom: 5, left: sel.left, width: sel.width, borderRadius: 999, zIndex: 0, transition: 'left .38s cubic-bezier(.34,1.35,.5,1), width .38s cubic-bezier(.34,1.35,.5,1)' }} />}
-        {items.map((k) => {
-          const active = effNav === k
-          return (
-            <button key={k} ref={(el) => { btnRefs.current[k] = el }} onClick={() => onGo(k)}
-              style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 15px', borderRadius: 999, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, whiteSpace: 'nowrap', color: active ? 'var(--ink)' : 'var(--muted)', fontWeight: active ? 600 : 500, transition: 'color .2s ease' }}>
-              {NAV[k]}
-              {BADGES[k] && <span style={{ fontSize: 10.5, fontWeight: 600, color: active ? 'var(--ink2)' : 'var(--faint)', fontVariantNumeric: 'tabular-nums' }}>{BADGES[k]}</span>}
-            </button>
-          )
-        })}
-      </nav>
-      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-        <button className="iconbtn" onClick={() => setDark((d) => !d)} aria-label="Toggle theme">{dark ? <Sun /> : <Moon />}</button>
-        <button className={`iconbtn${effNav === 'kb' || effNav === 'kbArticle' ? ' active' : ''}`} onClick={() => onGo('kb')} aria-label="Help"><HelpIcon /></button>
-        <button className={`iconbtn${effNav === 'settings' ? ' active' : ''}`} onClick={() => onGo('settings')} aria-label="Settings"><Gear /></button>
-        <div style={{ position: 'relative' }}>
-          <button onClick={() => setDemoOpen((o) => !o)} aria-label="Account and demo controls" style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--line)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 600, color: 'var(--ink2)', border: 'none', cursor: 'pointer', marginLeft: 2 }}>{initials(userName)}</button>
+    <div style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', justifyContent: 'center', padding: '14px 16px', pointerEvents: 'none' }}>
+      {/* one centered floating glass pill: logo · tabs (selector) · account */}
+      <nav className="glass" style={{ pointerEvents: 'auto', position: 'relative', display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px 6px 14px', borderRadius: 999, border: '1px solid var(--line)', boxShadow: '0 10px 30px rgba(10,10,10,.12)', maxWidth: 'calc(100vw - 32px)' }}>
+        <button onClick={() => onGo(items[0])} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink)', padding: 0, flexShrink: 0 }}>
+          {logoMark}
+          <b style={{ fontSize: 15.5, letterSpacing: '-.2px', fontWeight: 500 }}>edgefi <span style={{ fontWeight: 700 }}>hub</span></b>
+        </button>
+        {divider}
+        {/* tabs track (scroll-aware sliding selector) */}
+        <div onScroll={(e) => setScrollX(e.currentTarget.scrollLeft)} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 2, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none' }}>
+          {sel && <div className="glass-selector" style={{ position: 'absolute', top: 2, bottom: 2, left: sel.left - scrollX, width: sel.width, borderRadius: 999, zIndex: 0, transition: 'left .38s cubic-bezier(.34,1.35,.5,1), width .38s cubic-bezier(.34,1.35,.5,1)' }} />}
+          {items.map((k) => {
+            const active = effNav === k
+            return (
+              <button key={k} ref={(el) => { btnRefs.current[k] = el }} onClick={() => onGo(k)}
+                style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 999, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, whiteSpace: 'nowrap', color: active ? 'var(--ink)' : 'var(--muted)', fontWeight: active ? 600 : 500, transition: 'color .2s ease' }}>
+                {NAV[k]}
+                {BADGES[k] && <span style={{ fontSize: 10.5, fontWeight: 600, color: active ? 'var(--ink2)' : 'var(--faint)', fontVariantNumeric: 'tabular-nums' }}>{BADGES[k]}</span>}
+              </button>
+            )
+          })}
+        </div>
+        {divider}
+        {/* consolidated account + controls */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <button onClick={() => setDemoOpen((o) => !o)} aria-label="Account and controls" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: '3px 4px 3px 8px', borderRadius: 999 }}>
+            <span style={{ fontSize: 13, fontWeight: 550, color: 'var(--ink2)', whiteSpace: 'nowrap' }}>{firstName(userName)}</span>
+            <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--line)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 600, color: 'var(--ink2)' }}>{initials(userName)}</span>
+          </button>
           {demoOpen && (
             <>
               <div onClick={() => setDemoOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
-              <div className="glass" style={{ position: 'absolute', right: 0, top: 42, width: 244, padding: 16, borderRadius: 16, border: '1px solid var(--line)', boxShadow: '0 16px 44px rgba(10,10,10,.20)', zIndex: 41 }}>
+              <div className="glass" style={{ position: 'absolute', right: 0, top: 46, width: 252, padding: 16, borderRadius: 16, border: '1px solid var(--line)', boxShadow: '0 16px 44px rgba(10,10,10,.22)', zIndex: 41 }}>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>{userName}</div>
-                <div style={{ fontSize: 11.5, color: 'var(--muted)', marginBottom: 14, letterSpacing: '.02em' }}>Demo · view as</div>
+                <div style={{ fontSize: 11.5, color: 'var(--muted)', marginBottom: 12, letterSpacing: '.02em' }}>Demo · view as</div>
                 <PersonaControls {...personaProps} />
+                <div style={{ display: 'flex', gap: 8, marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--line)' }}>
+                  <button className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setDark((d) => !d)}>{dark ? 'Light' : 'Dark'}</button>
+                  <button className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { onGo('kb'); setDemoOpen(false) }}>Help</button>
+                  <button className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { onGo('settings'); setDemoOpen(false) }}>Settings</button>
+                </div>
                 {imp && <button onClick={onExitImp} className="btn btn-dark btn-sm" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }}>Exit “view as”</button>}
               </div>
             </>
           )}
         </div>
-      </div>
+      </nav>
     </div>
   )
 }
