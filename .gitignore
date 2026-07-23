@@ -8,3 +8,5 @@ dist-ssr
 # local tooling / reference material (not part of the app)
 .claude/
 edgefi-design/
+.vercel
+.env*
