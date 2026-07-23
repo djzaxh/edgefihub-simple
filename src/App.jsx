@@ -364,7 +364,7 @@ function BottomNav({ items, effNav, onGo, onMore, moreActive }) {
     : { left: `${activeIndex * pct}%`, width: `${pct}%`, transition: 'left .38s cubic-bezier(.34,1.35,.5,1)' }
 
   return (
-    <nav className="tabbar-float" style={{ position: 'fixed', left: 14, right: 14, bottom: 'calc(env(safe-area-inset-bottom) + 12px)', zIndex: 90, padding: 6, borderRadius: 34 }}
+    <nav className="tabbar-float" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 90, padding: '8px 12px', paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)', borderRadius: '20px 20px 0 0' }}
       onClickCapture={(e) => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation() } }}>
       <div ref={trackRef} style={{ position: 'relative', display: 'flex', alignItems: 'stretch', touchAction: 'none' }}
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>

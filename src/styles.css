@@ -211,16 +211,16 @@ tbody tr:hover { background: var(--soft2); }
   .nist-grid { grid-template-columns: 1fr !important; }
 }
 
-/* floating island tab bar — sits on the page bg with margins all around, so there's
-   no full-width bar meeting a differently-colored safe area (integrates seamlessly) */
+/* docked tab bar — flush to the bottom edge, its surface filling all the way down
+   through the safe area so there's no page-bg strip beneath it */
 .tabbar-float {
   background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow: 0 12px 32px rgba(10, 10, 10, 0.18), 0 2px 8px rgba(10, 10, 10, 0.06);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -8px 28px rgba(10, 10, 10, 0.14), 0 -2px 8px rgba(10, 10, 10, 0.05);
 }
 @supports ((backdrop-filter: blur(20px)) or (-webkit-backdrop-filter: blur(20px))) {
   .tabbar-float {
-    background: color-mix(in srgb, var(--surface) 84%, transparent);
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
     -webkit-backdrop-filter: saturate(180%) blur(22px);
     backdrop-filter: saturate(180%) blur(22px);
   }
