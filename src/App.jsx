@@ -42,10 +42,9 @@ export default function App() {
     document.body.classList.toggle('dark', dark)
     document.documentElement.classList.toggle('dark', dark) // paint the safe-area/canvas bg too
     localStorage.setItem('edgehub-theme', dark ? 'dark' : 'light')
-    // keep the iOS status-bar / browser-chrome tint matched to the active theme
-    let m = document.querySelector('meta[name="theme-color"][data-managed]')
-    if (!m) { m = document.createElement('meta'); m.name = 'theme-color'; m.setAttribute('data-managed', ''); document.head.appendChild(m) }
-    m.setAttribute('content', dark ? '#1C1C1C' : '#F5F5F5')
+    // NOTE: intentionally no theme-color meta. Setting it makes Safari paint the
+    // bottom toolbar a solid themed slab; leaving it off lets Safari use its
+    // translucent chrome so the page shows through to the bottom edge.
   }, [dark])
 
   // ---- persona
