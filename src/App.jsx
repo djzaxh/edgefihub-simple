@@ -40,6 +40,7 @@ export default function App() {
   const [dark, setDark] = useState(() => localStorage.getItem('edgehub-theme') === 'dark')
   useEffect(() => {
     document.body.classList.toggle('dark', dark)
+    document.documentElement.classList.toggle('dark', dark) // paint the safe-area/canvas bg too
     localStorage.setItem('edgehub-theme', dark ? 'dark' : 'light')
     // keep the iOS status-bar / browser-chrome tint matched to the active theme
     let m = document.querySelector('meta[name="theme-color"][data-managed]')
