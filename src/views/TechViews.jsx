@@ -1,7 +1,12 @@
 import React, { useState } from 'react'
 import { QUEUE, CUSTOMERS, INT_NAMES, FLAGS, AUDIT, firstName } from '../data.js'
 import { Status, Stat, ViewHeader, Card, listRowStyle, mobileCardStyle, useIsMobile, Chip } from '../components/ui.jsx'
+import Drawer, { DrawerField } from '../components/Drawer.jsx'
 import { Warn, Check } from '../icons.jsx'
+
+// integration status dot (shared by the Clients table + its detail drawer)
+const intDot = (v) => ({ width: 9, height: 9, borderRadius: '50%', background: v === 1 ? 'var(--faint)' : v === 2 ? 'var(--danger)' : 'var(--line-strong)' })
+const intLabel = (v) => (v === 1 ? 'Connected' : v === 2 ? 'Error' : 'Not connected')
 
 const cell = (bold) => ({ padding: '17px 28px', borderBottom: '1px solid var(--line2)', fontSize: 13.5, fontWeight: bold ? 550 : 400, verticalAlign: 'middle' })
 const th = (align = 'left') => ({ textAlign: align, fontSize: 12, fontWeight: 500, color: 'var(--muted)', padding: '16px 28px', borderBottom: '1px solid var(--line2)' })
@@ -24,6 +29,7 @@ const QueuedChip = () => (
 export function Queue({ onAction }) {
   const isMobile = useIsMobile()
   const [done, setDone] = useState([])
+  const [detail, setDetail] = useState(null)
   const open = QUEUE.filter((q) => q.sk !== 'ok').length
   const blocked = QUEUE.filter((q) => q.sk === 'warn').length
   // T6 — surface blocked work: sort blocked rows to the top
@@ -33,8 +39,9 @@ export function Queue({ onAction }) {
     const verb = STAGE_VERB[q.status]
     if (!verb) return null
     if (done.includes(q._i)) return <QueuedChip />
-    return <button className="btn btn-dark btn-sm" style={{ whiteSpace: 'nowrap', ...(mobile ? { alignSelf: 'flex-start' } : {}) }} onClick={() => act(q)}>{verb}</button>
+    return <button className="btn btn-dark btn-sm" style={{ whiteSpace: 'nowrap', ...(mobile ? { alignSelf: 'flex-start' } : {}) }} onClick={(e) => { e.stopPropagation(); act(q) }}>{verb}</button>
   }
+  const stop = (fn) => (e) => { e.stopPropagation(); fn() }
 
   return (
     <>
@@ -48,7 +55,7 @@ export function Queue({ onAction }) {
       {isMobile ? (
         <div>
           {rows.map((q) => (
-            <div key={q._i} style={mobileCardStyle}>
+            <div key={q._i} className="row-hover" style={{ ...mobileCardStyle, cursor: 'pointer' }} onClick={() => setDetail(q)}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>{q.type} — {q.person}</div>
@@ -78,7 +85,7 @@ export function Queue({ onAction }) {
               {rows.map((q) => {
                 const isBlocked = q.sk === 'warn'
                 return (
-                  <tr key={q._i}>
+                  <tr key={q._i} className="row-hover" style={{ cursor: 'pointer' }} onClick={() => setDetail(q)}>
                     <td style={{ ...cell(), color: 'var(--ink2)' }}>{q.client}</td>
                     <td style={{ ...cell(), color: 'var(--ink2)' }}>{q.person}</td>
                     <td style={cell()}>{q.type}</td>
@@ -90,7 +97,7 @@ export function Queue({ onAction }) {
                     </td>
                     <td style={{ ...cell(), color: 'var(--ink2)' }}>{q.handler}</td>
                     <td style={cell()}>
-                      <button className="btn btn-ghost btn-sm" style={{ gap: 4, padding: '5px 10px', color: 'var(--muted)' }} onClick={() => onAction && onAction('Transaction log — read-only')} aria-label="View transaction log">
+                      <button className="btn btn-ghost btn-sm" style={{ gap: 4, padding: '5px 10px', color: 'var(--muted)' }} onClick={stop(() => setDetail(q))} aria-label="View transaction log">
                         <Check size={11} /> txn
                       </button>
                     </td>
@@ -104,6 +111,29 @@ export function Queue({ onAction }) {
         </div>
       </Card>
       )}
+      {detail && (
+        <Drawer onClose={() => setDetail(null)} eyebrow={detail.type} title={detail.person}
+          footer={(() => {
+            const verb = STAGE_VERB[detail.status]
+            return verb && !done.includes(detail._i)
+              ? <button className="btn btn-dark" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { act(detail); setDetail(null) }}>{verb}</button>
+              : <button className="btn btn-ghost" style={{ marginLeft: 'auto' }} onClick={() => setDetail(null)}>Close</button>
+          })()}>
+          <DrawerField label="Client">{detail.client}</DrawerField>
+          <DrawerField label="Handler">{detail.handler}</DrawerField>
+          <DrawerField label="Age in queue">{detail.age}</DrawerField>
+          <div style={{ marginTop: 18 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--faint)', marginBottom: 9 }}>Current stage</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Status kind={detail.sk}>{detail.status}</Status>
+              <span style={{ fontSize: 12.5, color: 'var(--ink2)' }}>· {detail.stage}</span>
+            </div>
+          </div>
+          <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: 'var(--muted)' }}>
+            <Check size={12} /> Transaction log recorded · read-only
+          </div>
+        </Drawer>
+      )}
     </>
   )
 }
@@ -111,6 +141,7 @@ export function Queue({ onAction }) {
 /* ---------------------------------------------------------------- Clients */
 export function Customers({ onViewAs }) {
   const isMobile = useIsMobile()
+  const [detail, setDetail] = useState(null)
   return (
     <>
       <ViewHeader title="Clients" />
@@ -123,7 +154,7 @@ export function Customers({ onViewAs }) {
       {isMobile ? (
         <div>
           {CUSTOMERS.map((c, i) => (
-            <div key={i} style={mobileCardStyle}>
+            <div key={i} className="row-hover" style={{ ...mobileCardStyle, cursor: 'pointer' }} onClick={() => setDetail(c)}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>{c.name}</div>
@@ -135,7 +166,7 @@ export function Customers({ onViewAs }) {
                 <Status kind={c.sk}>{c.status}</Status>
                 <span style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{c.users} users</span>
               </div>
-              <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => onViewAs(c)}>View as {firstName(c.admin)}</button>
+              <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }} onClick={(e) => { e.stopPropagation(); onViewAs(c) }}>View as {firstName(c.admin)}</button>
             </div>
           ))}
         </div>
@@ -150,7 +181,7 @@ export function Customers({ onViewAs }) {
             </tr></thead>
             <tbody>
               {CUSTOMERS.map((c, i) => (
-                <tr key={i}>
+                <tr key={i} className="row-hover" style={{ cursor: 'pointer' }} onClick={() => setDetail(c)}>
                   <td style={cell()}>
                     <div style={{ fontSize: 13.5, fontWeight: 600 }}>{c.name}</div>
                     <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{c.admin} · {c.adminRole}</div>
@@ -168,7 +199,7 @@ export function Customers({ onViewAs }) {
                   <td style={cell()}><Status kind={c.sk}>{c.status}</Status></td>
                   <td style={{ ...cell(), color: 'var(--ink2)', fontSize: 12.5 }}>{c.plan}</td>
                   <td style={{ ...cell(), textAlign: 'right' }}>
-                    <button className="btn btn-ghost btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={() => onViewAs(c)}>View as {firstName(c.admin)}</button>
+                    <button className="btn btn-ghost btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={(e) => { e.stopPropagation(); onViewAs(c) }}>View as {firstName(c.admin)}</button>
                   </td>
                 </tr>
               ))}
@@ -176,6 +207,27 @@ export function Customers({ onViewAs }) {
           </table>
         </div>
       </Card>
+      )}
+      {detail && (
+        <Drawer onClose={() => setDetail(null)} eyebrow={`${detail.users} users · ${detail.plan}`} title={detail.name}
+          footer={<button className="btn btn-dark" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { onViewAs(detail); setDetail(null) }}>View as {firstName(detail.admin)}</button>}>
+          <DrawerField label="Primary admin">{detail.admin} · {detail.adminRole}</DrawerField>
+          <DrawerField label="Users under management">{detail.users}</DrawerField>
+          <DrawerField label="Security posture"><span style={{ fontSize: 14, fontWeight: 700 }}>{detail.grade}</span></DrawerField>
+          <DrawerField label="Status"><Status kind={detail.sk}>{detail.status}</Status></DrawerField>
+          <div style={{ marginTop: 18 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--faint)', marginBottom: 10 }}>Integrations</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {detail.ints.map((v, j) => (
+                <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
+                  <span style={intDot(v)} />
+                  <span style={{ flex: 1 }}>{INT_NAMES[j]}</span>
+                  <span style={{ color: v === 2 ? 'var(--danger)' : 'var(--muted)' }}>{intLabel(v)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Drawer>
       )}
     </>
   )

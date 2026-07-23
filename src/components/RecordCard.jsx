@@ -18,16 +18,18 @@ export default function RecordCard({
   meta,
   actionLabel,
   onAction,
+  onOpen,
   showAction = true,
 }) {
   const dot = (PILL[TONE_TO_KIND[tone]] || PILL.mut).dot
   const hasAction = showAction && actionLabel
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: '15px 16px', display: 'flex', flexDirection: 'column', gap: 11 }}>
+    <div className={onOpen ? 'row-hover' : undefined} onClick={onOpen}
+      style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: '15px 16px', display: 'flex', flexDirection: 'column', gap: 11, cursor: onOpen ? 'pointer' : undefined }}>
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
         <div style={{ fontSize: 14, fontWeight: 600, flex: 1, minWidth: 0 }}>{title}</div>
         {hasAction && (
-          <button className="btn btn-dark btn-sm" style={{ flexShrink: 0 }} onClick={onAction}>{actionLabel}</button>
+          <button className="btn btn-dark btn-sm" style={{ flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); onAction && onAction() }}>{actionLabel}</button>
         )}
       </div>
       {subtitle && <div style={{ fontSize: 12, color: 'var(--muted)' }}>{subtitle}</div>}

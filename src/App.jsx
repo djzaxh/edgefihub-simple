@@ -322,63 +322,44 @@ function BottomNav({ items, effNav, onGo, onMore, moreActive }) {
   const activeIndex = Math.max(0, tabs.findIndex((t) => t.active))
   const pct = 100 / n
   const trackRef = useRef(null)
-  // one gesture, two axes: horizontal slides the selector between tabs,
-  // vertical drags the whole bar with the finger (rubber-band, snaps back).
-  const g = useRef({ active: false, mode: null })
-  const [dragLeft, setDragLeft] = useState(null) // selector px while sliding, else null
-  const [dragY, setDragY] = useState(0)           // bar offset px while lifting, else 0
-  const [vDrag, setVDrag] = useState(false)       // true while the bar is being lifted
+  const drag = useRef({ active: false })
+  const [dragLeft, setDragLeft] = useState(null) // px while dragging, else null
   const suppressClick = useRef(false)
-
-  // follow the finger 1:1 up to 130px, then resist — the bar feels attached but tethered
-  const rubber = (v) => { const s = Math.sign(v), a = Math.abs(v), max = 130; return s * (a < max ? a : max + (a - max) * 0.35) }
 
   const down = (e) => {
     const rect = trackRef.current.getBoundingClientRect()
-    g.current = { active: true, mode: null, sx: e.clientX, sy: e.clientY, left: rect.left, width: rect.width, tw: rect.width / n, moved: false }
+    drag.current = { active: true, start: e.clientX, left: rect.left, width: rect.width, tw: rect.width / n, moved: false }
     try { e.currentTarget.setPointerCapture(e.pointerId) } catch (_) {}
   }
   const move = (e) => {
-    const d = g.current
+    const d = drag.current
     if (!d.active) return
-    const dx = e.clientX - d.sx, dy = e.clientY - d.sy
-    if (!d.mode) {
-      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return
-      d.mode = Math.abs(dy) > Math.abs(dx) ? 'v' : 'h'
+    if (d.moved || Math.abs(e.clientX - d.start) > 6) {
       d.moved = true
-      if (d.mode === 'v') setVDrag(true)
-    }
-    if (d.mode === 'h') {
       let x = e.clientX - d.left - d.tw / 2
       x = Math.max(0, Math.min(x, d.width - d.tw))
       setDragLeft(x)
-    } else {
-      setDragY(rubber(dy))
     }
   }
   const up = () => {
-    const d = g.current
+    const d = drag.current
     if (!d.active) return
     d.active = false
-    if (d.mode === 'h' && dragLeft != null) {
+    if (d.moved && dragLeft != null) {
       const idx = Math.max(0, Math.min(Math.round(dragLeft / d.tw), n - 1))
+      suppressClick.current = true
+      setTimeout(() => { suppressClick.current = false }, 60)
       if (!tabs[idx].active) tabs[idx].onClick()
     }
-    if (d.moved) { suppressClick.current = true; setTimeout(() => { suppressClick.current = false }, 60) }
     setDragLeft(null)
-    setDragY(0)   // spring back to rest
-    setVDrag(false)
-    g.current.mode = null
   }
 
   const selStyle = dragLeft != null
-    ? { left: dragLeft, width: `${g.current.tw}px`, transition: 'none' }
+    ? { left: dragLeft, width: `${drag.current.tw}px`, transition: 'none' }
     : { left: `${activeIndex * pct}%`, width: `${pct}%`, transition: 'left .38s cubic-bezier(.34,1.35,.5,1)' }
 
   return (
-    <nav className="tabbar-float" style={{ position: 'fixed', left: 14, right: 14, bottom: 'calc(env(safe-area-inset-bottom) + 12px)', zIndex: 90, padding: 6, borderRadius: 34,
-      transform: dragY ? `translateY(${dragY}px)` : undefined,
-      transition: vDrag ? 'none' : 'transform .42s cubic-bezier(.34,1.4,.5,1)' }}
+    <nav className="tabbar-float" style={{ position: 'fixed', left: 14, right: 14, bottom: 'calc(env(safe-area-inset-bottom) + 12px)', zIndex: 90, padding: 6, borderRadius: 34 }}
       onClickCapture={(e) => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation() } }}>
       <div ref={trackRef} style={{ position: 'relative', display: 'flex', alignItems: 'stretch', touchAction: 'none' }}
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>

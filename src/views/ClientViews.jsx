@@ -4,6 +4,7 @@ import {
 } from '../data.js'
 import { Pill, Status, Stat, Avatar, ViewHeader, Card, GradeRing, Meter, ActivityFeed, listRowStyle, useIsMobile, pickTopChip } from '../components/ui.jsx'
 import RecordCard from '../components/RecordCard.jsx'
+import Drawer, { DrawerField } from '../components/Drawer.jsx'
 import { Search } from '../icons.jsx'
 
 // ticket status kind -> RecordCard tone
@@ -11,6 +12,7 @@ const TICKET_TONE = { prov: 'progress', warn: 'warning', mut: 'neutral', ok: 'su
 
 /* ---------------------------------------------------------------- Overview */
 export function Overview({ userFirst, grade, gradePct, prios, costsAllowed, tickets, onWizard, onTicketAct, onCustomize }) {
+  const isMobile = useIsMobile()
   const [hot, setHot] = useState(null)
   const heroMap = HERO(grade)
   const enabled = prios.filter((p) => p.on && (p.k !== 'IT costs / mo' || costsAllowed))
@@ -27,8 +29,8 @@ export function Overview({ userFirst, grade, gradePct, prios, costsAllowed, tick
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 26px', flexWrap: 'wrap', animation: 'slideUp .3s ease both' }}>
         <h1 className="h1" style={{ fontSize: 24 }}>Welcome, {userFirst}</h1>
-        <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={onCustomize}>Customize</button>
-        <button className="btn btn-dark" onClick={onWizard}>Ask for Help</button>
+        {!isMobile && <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={onCustomize}>Customize</button>}
+        <button className="btn btn-dark" style={isMobile ? { marginLeft: 'auto' } : undefined} onClick={onWizard}>Ask for Help</button>
       </div>
 
       {/* C1 — the day's to-dos come before the at-a-glance numbers */}
@@ -94,6 +96,9 @@ export function Overview({ userFirst, grade, gradePct, prios, costsAllowed, tick
 /* ---------------------------------------------------------------- Tickets */
 export function Tickets({ tickets, onWizard, onTicketAct }) {
   const isMobile = useIsMobile()
+  const [detail, setDetail] = useState(null)
+  // actionable rows jump straight to the action sheet; the rest open a read-only detail
+  const openRow = (t) => (t.act && !t.acted ? onTicketAct(t) : setDetail(t))
   return (
     <>
       <ViewHeader title="Tickets">
@@ -115,6 +120,7 @@ export function Tickets({ tickets, onWizard, onTicketAct }) {
               actionLabel={t.act ? (t.act === 'approve' ? 'Approve' : 'Answer') : null}
               showAction={!!t.act && !t.acted}
               onAction={() => onTicketAct(t)}
+              onOpen={() => openRow(t)}
             />
           ))}
         </div>
@@ -127,14 +133,14 @@ export function Tickets({ tickets, onWizard, onTicketAct }) {
             ))}</tr></thead>
             <tbody>
               {tickets.map((t, i) => (
-                <tr key={i}>
+                <tr key={i} className="row-hover" style={{ cursor: 'pointer' }} onClick={() => openRow(t)}>
                   <td style={cell(true)}>{t.name}</td>
                   <td style={{ ...cell(), color: 'var(--ink2)' }}>{t.by}</td>
                   <td style={{ ...cell(), color: t.pk === 'warn' ? 'var(--ink2)' : 'var(--muted)' }}>{t.pri}</td>
                   <td style={cell()}><Status kind={t.sk}>{t.status}</Status></td>
                   <td style={{ ...cell(), textAlign: 'right' }}>
                     {t.act && !t.acted && (
-                      <button className="btn btn-dark btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={() => onTicketAct(t)}>
+                      <button className="btn btn-dark btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={(e) => { e.stopPropagation(); onTicketAct(t) }}>
                         {t.act === 'approve' ? 'Approve' : 'Answer'}
                       </button>
                     )}
@@ -146,6 +152,18 @@ export function Tickets({ tickets, onWizard, onTicketAct }) {
           </table>
         </div>
       </Card>
+      )}
+      {detail && (
+        <Drawer onClose={() => setDetail(null)} eyebrow="Ticket" title={detail.name}
+          footer={<button className="btn btn-ghost" style={{ marginLeft: 'auto' }} onClick={() => setDetail(null)}>Close</button>}>
+          <DrawerField label="Requested by">{detail.by}</DrawerField>
+          <DrawerField label="Priority">{detail.pri}</DrawerField>
+          <DrawerField label="Status"><Status kind={detail.sk}>{detail.status}</Status></DrawerField>
+          <DrawerField label="Age">{detail.age}</DrawerField>
+          {detail.acted && (
+            <div style={{ marginTop: 16, fontSize: 12, color: 'var(--muted)' }}>This request has been handled — no further action needed.</div>
+          )}
+        </Drawer>
       )}
     </>
   )

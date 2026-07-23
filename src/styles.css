@@ -280,6 +280,25 @@ body.dark .glass-selector {
   }
 }
 
+/* detail drawer — right-side panel on desktop */
+.drawer-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(10,10,10,.28);
+  display: flex; justify-content: flex-end;
+  animation: fade .2s ease both;
+}
+.drawer-panel {
+  position: relative;
+  width: 100%; height: 100%;
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  box-shadow: -14px 0 44px rgba(10,10,10,.14);
+  animation: drawerIn .34s cubic-bezier(.16,1,.3,1) both;
+}
+.drawer-x { position: absolute; top: 13px; right: 13px; z-index: 2; }
+@keyframes drawerIn { from { transform: translateX(28px); opacity: .5 } to { transform: none; opacity: 1 } }
+
 /* keyboard focus ring — ink, per brand */
 :focus-visible {
   outline: 2px solid var(--ink);
