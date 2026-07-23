@@ -184,9 +184,11 @@ tbody tr:hover { background: var(--soft2); }
 ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 8px; border: 2px solid var(--surface); }
 ::-webkit-scrollbar-track { background: transparent; }
 
-/* nav item hover slide */
-.navbtn:hover span:first-child { transform: translateX(4px); }
-.navbtn span:first-child { transition: transform .22s cubic-bezier(.2,.8,.2,1); display: inline-block; }
+/* sidebar nav items read as buttons: hover fills a soft background, active is
+   shown by weight (no underline) */
+.navbtn { background: none; border-radius: 8px; transition: background .14s ease; }
+.navbtn:hover { background: var(--soft); }
+.navbtn.active { background: var(--soft); }
 
 /* security NIST grid */
 .nist-grid { grid-template-columns: repeat(5, 1fr); }
