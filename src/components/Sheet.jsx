@@ -3,12 +3,12 @@ import { Close } from '../icons.jsx'
 import { useIsMobile } from './ui.jsx'
 
 /**
- * Rubber-band swipe-to-dismiss. Grab the top area of the sheet (the grab-handle
- * / header) OR pull down while its content is scrolled to the top, and the whole
- * sheet follows the finger: 1:1 downward with a slight fade, resisted upward, so
- * it feels physically attached. Released past the threshold it closes; otherwise
- * it springs back. Touch listeners are NON-passive so we can own the gesture and
- * block Safari's pull-to-refresh / native scroll while dragging.
+ * Follow-finger swipe-to-dismiss. Pull down while the content is at the top and
+ * the whole sheet tracks your finger 1:1 with a fade. Release past a third of the
+ * sheet's height (or with a fast downward flick) and it animates closed; short of
+ * that it springs back open. If the content is scrollable it scrolls first, then
+ * takes over the drag once you're at the top — standard iOS bottom-sheet feel.
+ * Touch listeners are NON-passive so we own the gesture (no pull-to-refresh).
  */
 function useSwipeDismiss(onClose, enabled) {
   const sheetRef = useRef(null)
@@ -16,34 +16,51 @@ function useSwipeDismiss(onClose, enabled) {
     if (!enabled) return
     const sheet = sheetRef.current
     if (!sheet) return
-    let startY = null, dy = 0, dragging = false, canDrag = false
-    // downward moves 1:1; upward is resisted (feels tethered, not detached)
-    const follow = (d) => (d < 0 ? -Math.pow(-d, 0.82) : d)
-    const apply = (y, animate) => {
-      sheet.style.transition = animate ? 'transform .36s cubic-bezier(.16,1,.3,1), opacity .36s ease' : 'none'
+    let startY = null, dy = 0, dragging = false, atTop = true, lastY = 0, lastT = 0, vel = 0
+    const set = (y, transition) => {
+      sheet.style.transition = transition || 'none'
       sheet.style.transform = y ? `translateY(${y}px)` : ''
-      sheet.style.opacity = y > 0 ? String(Math.max(0.4, 1 - y / 640)) : ''
+      sheet.style.opacity = y > 0 ? String(Math.max(0.35, 1 - y / 620)) : ''
+    }
+    const springOpen = () => set(0, 'transform .34s cubic-bezier(.22,1,.3,1), opacity .34s ease')
+    const animateClose = () => {
+      const h = sheet.getBoundingClientRect().height || 600
+      sheet.style.transition = 'transform .26s cubic-bezier(.4,0,1,1), opacity .26s ease'
+      sheet.style.transform = `translateY(${h}px)`
+      sheet.style.opacity = '0'
+      setTimeout(onClose, 190)
     }
     const ts = (e) => {
-      startY = e.touches[0].clientY
-      const top = sheet.getBoundingClientRect().top
-      // grabbing the top ~92px (handle + header) always drags; elsewhere only
-      // when the content is already scrolled to the very top
-      canDrag = (startY - top) < 92 || sheet.scrollTop <= 0
+      startY = lastY = e.touches[0].clientY
+      lastT = e.timeStamp; vel = 0
+      atTop = sheet.scrollTop <= 0
       dragging = false; dy = 0
     }
     const tm = (e) => {
-      if (startY == null || !canDrag) return
-      const d = e.touches[0].clientY - startY
-      if (!dragging && Math.abs(d) < 4) return
-      dragging = true
+      if (startY == null) return
+      const y = e.touches[0].clientY
+      const d = y - startY
+      // only take over on a downward pull that begins at the top of the content;
+      // otherwise let the body scroll natively
+      if (!dragging) {
+        if (d <= 3 || !atTop) return
+        dragging = true
+      }
+      const now = e.timeStamp
+      if (now > lastT) vel = (y - lastY) / (now - lastT) // px/ms, +down
+      lastY = y; lastT = now
       dy = d
-      apply(follow(dy), false)
-      if (e.cancelable) e.preventDefault() // we own this gesture now
+      set(dy)
+      if (e.cancelable) e.preventDefault()
     }
     const te = () => {
-      if (dragging) { if (dy > 120) { apply(0, true); onClose() } else apply(0, true) }
-      startY = null; dragging = false; canDrag = false; dy = 0
+      if (dragging) {
+        const h = sheet.getBoundingClientRect().height || 600
+        const past = dy > h / 3            // released past a third of the way
+        const flick = vel > 0.55 && dy > 40 // or a quick downward flick
+        if (past || flick) animateClose(); else springOpen()
+      }
+      startY = null; dragging = false; dy = 0
     }
     sheet.addEventListener('touchstart', ts, { passive: false })
     sheet.addEventListener('touchmove', tm, { passive: false })
