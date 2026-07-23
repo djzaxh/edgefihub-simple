@@ -115,3 +115,7 @@ export const CreditCard = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><rect x
 export const Layers = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><path d="M12 3l9 5-9 5-9-5z" /><path d="M3 13l9 5 9-5" /></svg>)
 export const Building = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><rect x="4" y="3" width="16" height="18" rx="1.5" /><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01M9 15h.01M15 15h.01" /></svg>)
 export const Clipboard = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 4a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4v1H9z" /><path d="M9 11h6M9 15h4" /></svg>)
+export const Laptop = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><rect x="4" y="4" width="16" height="12" rx="2" /><path d="M2 20h20M9 20l.5-4M15 20l-.5-4" /></svg>)
+export const Plug = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><path d="M9 2v6M15 2v6M7 8h10v3a5 5 0 0 1-10 0z" /><path d="M12 16v6" /></svg>)
+export const Toggle = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><rect x="2" y="7" width="20" height="10" rx="5" /><circle cx="8" cy="12" r="3" /></svg>)
+export const Flow = ({ size }) => (<svg {...base(size ?? 20, 1.9)}><rect x="3" y="3" width="7" height="6" rx="1.5" /><rect x="14" y="15" width="7" height="6" rx="1.5" /><path d="M6.5 9v4a2 2 0 0 0 2 2h6" /></svg>)

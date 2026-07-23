@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { WIZ_TYPES, WIZ_PRIOS, initials, firstName } from '../data.js'
-import { ChevLeft, ChevRight, Warn } from '../icons.jsx'
+import { WIZ_TYPES, WIZ_PRIOS, CAPABILITIES, initials, firstName } from '../data.js'
+import { ChevLeft, ChevRight, Warn, Check } from '../icons.jsx'
 import Sheet from './Sheet.jsx'
 
 // Title block for a sheet (close is handled by Sheet: grab handle on mobile, X on desktop)
@@ -128,6 +128,79 @@ export function Offboard({ name, onClose, onConfirm }) {
       <Footer>
         <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
         <button className="btn" style={{ marginLeft: 'auto', background: 'var(--danger)', color: '#fff', opacity: chk ? 1 : 0.4, cursor: chk ? 'pointer' : 'not-allowed' }} disabled={!chk} onClick={onConfirm}>Start offboarding</button>
+      </Footer>
+    </Sheet>
+  )
+}
+
+/* ---------------------------------------------------------------- New client onboarding */
+const PLANS = ['Resilience Core', 'Resilience Pro', 'Resilience Enterprise', 'Growth']
+export function NewClient({ onClose, onSubmit }) {
+  const [step, setStep] = useState(1)
+  const [company, setCompany] = useState('')
+  const [admin, setAdmin] = useState('')
+  const [email, setEmail] = useState('')
+  const [plan, setPlan] = useState(PLANS[1])
+  const [selfOnboard, setSelfOnboard] = useState(true)
+  const [caps, setCaps] = useState(() => CAPABILITIES.filter((c) => c.on).map((c) => c.name))
+  const toggleCap = (n) => setCaps((cs) => (cs.includes(n) ? cs.filter((x) => x !== n) : [...cs, n]))
+  const can = company.trim() && admin.trim()
+
+  return (
+    <Sheet onClose={onClose} maxWidth={540}>
+      <Header>
+        {step === 2 && <button className="btn btn-ghost btn-sm" style={{ marginBottom: 8 }} onClick={() => setStep(1)}><ChevLeft /> Back</button>}
+        <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--purple)', letterSpacing: '.04em', textTransform: 'uppercase' }}>New client · all online</div>
+        <div style={{ fontSize: 17, fontWeight: 600, marginTop: 3 }}>{step === 1 ? 'Company & primary admin' : 'Plan & capabilities'}</div>
+      </Header>
+      {step === 1 ? (
+        <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <label style={fieldLbl}>Company name
+            <input className="input" style={{ marginTop: 6 }} value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Acme Co." />
+          </label>
+          <label style={fieldLbl}>Primary admin
+            <input className="input" style={{ marginTop: 6 }} value={admin} onChange={(e) => setAdmin(e.target.value)} placeholder="Full name" />
+          </label>
+          <label style={fieldLbl}>Admin email
+            <input className="input" style={{ marginTop: 6 }} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" />
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+            <input type="checkbox" checked={selfOnboard} onChange={(e) => setSelfOnboard(e.target.checked)} style={{ accentColor: 'var(--ink)', width: 16, height: 16 }} />
+            Let this client self-onboard their own users
+          </label>
+        </div>
+      ) : (
+        <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <div style={fieldLbl}>Plan</div>
+            <select className="input" style={{ marginTop: 6 }} value={plan} onChange={(e) => setPlan(e.target.value)}>
+              {PLANS.map((p) => <option key={p}>{p}</option>)}
+            </select>
+          </div>
+          <div>
+            <div style={fieldLbl}>Capabilities to enable</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+              {CAPABILITIES.map((c) => {
+                const on = caps.includes(c.name)
+                return (
+                  <button key={c.name} onClick={() => toggleCap(c.name)} className="row-hover"
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px', border: `1px solid ${on ? 'var(--ink)' : 'var(--line)'}`, borderRadius: 8, background: on ? 'var(--soft)' : 'var(--surface)', cursor: 'pointer', textAlign: 'left', color: 'var(--ink)' }}>
+                    <span style={{ width: 18, height: 18, borderRadius: 5, border: `1px solid ${on ? 'var(--ink)' : 'var(--line-strong)'}`, background: on ? 'var(--ink)' : 'transparent', color: 'var(--surface)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>{on && <Check size={12} sw={3} />}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, flex: 1 }}>{c.name}</span>
+                    <span style={{ fontSize: 11, color: 'var(--faint)' }}>{c.via}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+      <Footer>
+        {step === 1 ? (
+          <button className="btn btn-dark" style={{ marginLeft: 'auto', opacity: can ? 1 : 0.4, cursor: can ? 'pointer' : 'not-allowed' }} disabled={!can} onClick={() => setStep(2)}>Continue</button>
+        ) : (
+          <button className="btn btn-dark" style={{ width: '100%', justifyContent: 'center' }} onClick={() => onSubmit({ company: company.trim() || 'New client', admin: admin.trim(), plan, caps: caps.length })}>Start onboarding</button>
+        )}
       </Footer>
     </Sheet>
   )

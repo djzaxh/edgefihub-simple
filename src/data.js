@@ -29,14 +29,15 @@ export const RING_C = 2 * Math.PI * 52 // ~326.73
 
 // --- navigation labels & badges ----------------------------------------------
 export const NAV = {
-  overview: 'Overview', tickets: 'Tickets', people: 'People',
+  overview: 'Overview', tickets: 'Tickets', people: 'People', devices: 'Devices',
   security: 'Security', training: 'Security Training', costs: 'Costs',
   queue: 'JML queue', customers: 'Clients', remediation: 'Watchtower', audit: 'Audit log',
+  workflows: 'Workflows', integrations: 'Integrations', capabilities: 'Capabilities',
 }
 export const BADGES = { tickets: '7', queue: '7', remediation: '4' }
 
-export const CLIENT_KEYS = ['overview', 'tickets', 'people', 'security', 'training', 'costs']
-export const TECH_KEYS = ['queue', 'customers', 'remediation', 'audit']
+export const CLIENT_KEYS = ['overview', 'tickets', 'people', 'devices', 'security', 'training', 'costs']
+export const TECH_KEYS = ['queue', 'customers', 'workflows', 'remediation', 'audit', 'integrations', 'capabilities']
 
 // --- overview: hero / stat priority values -----------------------------------
 export const HERO = (grade) => ({
@@ -99,6 +100,57 @@ export const LICENSES = [
   { title: 'Slack Business+',                used: 44, total: 44, cost: '$528' },
   { title: 'Zoom Workplace',                 used: 12, total: 15, cost: '$200' },
   { title: 'Figma Professional',             used: 4,  total: 5,  cost: '$60' },
+]
+
+// --- devices (client) ---------------------------------------------------------
+// device · assignee · Intune compliance · patching · last seen
+export const DEVICES = [
+  { name: 'MBP-0142', model: 'MacBook Pro 14"',   assignee: 'Rachel Kim',  compliance: 'Compliant',     ck: 'ok',   patch: 'Up to date',   pk: 'ok',   seen: '2h ago' },
+  { name: 'LT-0093',  model: 'Dell Latitude 7440', assignee: 'Morgan Diaz', compliance: 'Compliant',     ck: 'ok',   patch: 'Up to date',   pk: 'ok',   seen: '5h ago' },
+  { name: 'LT-0114',  model: 'Dell Latitude 7440', assignee: 'Marcus Cole', compliance: 'Compliant',     ck: 'ok',   patch: '40+ days behind', pk: 'warn', seen: '1d ago' },
+  { name: 'LT-0126',  model: 'Lenovo ThinkPad X1', assignee: 'Jonah Weiss', compliance: 'Non-compliant', ck: 'err',  patch: '40+ days behind', pk: 'warn', seen: '3d ago' },
+  { name: 'MBP-0155', model: 'MacBook Air 13"',    assignee: 'Leah Kim',    compliance: 'Compliant',     ck: 'ok',   patch: 'Up to date',   pk: 'ok',   seen: '1h ago' },
+  { name: 'IPH-0210', model: 'iPhone 15',          assignee: 'Dana Okafor', compliance: 'Compliant',     ck: 'ok',   patch: 'Up to date',   pk: 'ok',   seen: '30m ago' },
+  { name: 'LT-0131',  model: 'Dell Latitude 7440', assignee: 'Unassigned',  compliance: 'Not enrolled',  ck: 'mut',  patch: '—',            pk: 'mut',  seen: 'never' },
+]
+
+// --- integrations (MSP settings) ----------------------------------------------
+// connected through Hub with business-specific keys; abstracted so services swap
+export const INTEGRATIONS = [
+  { name: 'HaloPSA',       cat: 'Ticketing',       status: 'Connected',     sk: 'ok',  detail: 'Syncing · 12 clients' },
+  { name: 'Microsoft 365 / Entra', cat: 'Identity', status: 'Connected',    sk: 'ok',  detail: 'Directory + licensing' },
+  { name: 'Intune',        cat: 'Device management', status: 'Connected',   sk: 'ok',  detail: 'Compliance + patching' },
+  { name: 'NinjaOne',      cat: 'RMM',             status: 'Connected',     sk: 'ok',  detail: 'Monitoring + scripts' },
+  { name: 'CrowdStrike',   cat: 'EDR',             status: 'Token expired', sk: 'err', detail: 'Reconnect required' },
+  { name: 'Huntress',      cat: 'MDR',             status: 'Not connected', sk: 'mut', detail: 'Available' },
+  { name: 'Backup Verification', cat: 'Backup',    status: 'Not connected', sk: 'mut', detail: 'Available' },
+]
+
+// --- capabilities / feature flags (MSP settings) ------------------------------
+// each capability can bind to any connected integration
+export const CAPABILITIES = [
+  { name: 'Ticketing',          desc: 'Create and sync tickets from actions', on: true,  via: 'HaloPSA' },
+  { name: 'Identity & licensing', desc: 'Provision users, groups, and licenses', on: true, via: 'Microsoft 365 / Entra' },
+  { name: 'Device management',  desc: 'Compliance, patching, and device state', on: true,  via: 'Intune' },
+  { name: 'Endpoint detection', desc: 'EDR signal in Watchtower',              on: true,  via: 'CrowdStrike' },
+  { name: 'Backup verification', desc: 'Nightly restore-test evidence',        on: false, via: '—' },
+  { name: 'Security training',  desc: 'Assign and nudge phishing modules',     on: true,  via: 'Phin' },
+]
+
+// --- JML workflow builder (MSP) -----------------------------------------------
+// a workflow is an ordered list of actions; each may create a ticket + depend on prior
+export const WORKFLOW_TEMPLATES = [
+  { id: 'onboard', name: 'User onboarding', kind: 'Joiner', actions: 6 },
+  { id: 'offboard', name: 'User offboarding', kind: 'Leaver', actions: 5 },
+  { id: 'mover', name: 'Role change', kind: 'Mover', actions: 4 },
+]
+export const WORKFLOW_ACTIONS = [
+  { id: 'a1', name: 'Collect new-hire details', owner: 'HR', ticket: false,  dep: false },
+  { id: 'a2', name: 'Create identity + mailbox', owner: 'edgefi', ticket: true, dep: true },
+  { id: 'a3', name: 'Assign licenses', owner: 'edgefi', ticket: false, dep: true },
+  { id: 'a4', name: 'Order + image device', owner: 'edgefi', ticket: true, dep: true },
+  { id: 'a5', name: 'Add to groups + shares', owner: 'edgefi', ticket: false, dep: true },
+  { id: 'a6', name: 'Send welcome email', owner: 'Automated', ticket: false, dep: true },
 ]
 
 // --- knowledge base -----------------------------------------------------------

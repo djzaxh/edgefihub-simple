@@ -2,17 +2,17 @@ import React, { useEffect, useRef, useState } from 'react'
 import {
   NAV, BADGES, CLIENT_KEYS, TECH_KEYS, GRADE_PCT, TICKETS, PEOPLE, PRIOS, TRAINING, LICENSES, initials, firstName,
 } from './data.js'
-import { Sun, Moon, Help as HelpIcon, Gear, Eye, Check, Dots, Warn, Home, Ticket, Users, Shield, GradCap, CreditCard, Layers, Building, Clipboard } from './icons.jsx'
-import { Overview, Tickets, People, Security, Training, Costs } from './views/ClientViews.jsx'
-import { Queue, Customers, Watchtower, Audit } from './views/TechViews.jsx'
+import { Sun, Moon, Help as HelpIcon, Gear, Eye, Check, Dots, Warn, Home, Ticket, Users, Shield, GradCap, CreditCard, Layers, Building, Clipboard, Laptop, Plug, Toggle, Flow } from './icons.jsx'
+import { Overview, Tickets, People, Devices, Security, Training, Costs } from './views/ClientViews.jsx'
+import { Queue, Customers, Watchtower, Audit, Workflows, Integrations, Capabilities } from './views/TechViews.jsx'
 import { KB, KBArticle, Settings } from './views/Help.jsx'
-import { Wizard, Manage, Offboard, TicketAction } from './components/Modals.jsx'
+import { Wizard, Manage, Offboard, TicketAction, NewClient } from './components/Modals.jsx'
 import Sheet from './components/Sheet.jsx'
 import { useIsMobile } from './components/ui.jsx'
 
 // bottom-nav icons + short labels per page
-const NAV_ICONS = { overview: Home, tickets: Ticket, people: Users, security: Shield, training: GradCap, costs: CreditCard, queue: Layers, customers: Building, remediation: Warn, audit: Clipboard }
-const NAV_SHORT = { overview: 'Home', tickets: 'Tickets', people: 'People', security: 'Security', training: 'Training', costs: 'Costs', queue: 'Queue', customers: 'Clients', remediation: 'Watchtower', audit: 'Audit' }
+const NAV_ICONS = { overview: Home, tickets: Ticket, people: Users, devices: Laptop, security: Shield, training: GradCap, costs: CreditCard, queue: Layers, customers: Building, remediation: Warn, audit: Clipboard, workflows: Flow, integrations: Plug, capabilities: Toggle }
+const NAV_SHORT = { overview: 'Home', tickets: 'Tickets', people: 'People', devices: 'Devices', security: 'Security', training: 'Training', costs: 'Costs', queue: 'Queue', customers: 'Clients', remediation: 'Watchtower', audit: 'Audit', workflows: 'Workflows', integrations: 'Integrations', capabilities: 'Capabilities' }
 
 // Per-role page permissions for client Modes — each role only sees what's relevant.
 //   Owner       — full access; general overview + security focus
@@ -20,19 +20,21 @@ const NAV_SHORT = { overview: 'Home', tickets: 'Tickets', people: 'People', secu
 //   IT Manager  — technical ops: onboarding/offboarding, tickets, security, training, licensing (costs)
 //   HR          — simplified: just onboarding/offboarding
 const ROLE_PAGES = {
-  Owner:        ['overview', 'tickets', 'people', 'security', 'training', 'costs'],
+  Owner:        ['overview', 'tickets', 'people', 'devices', 'security', 'training', 'costs'],
   CFO:          ['overview', 'tickets', 'security', 'training', 'costs'],
-  'IT Manager': ['overview', 'tickets', 'people', 'security', 'training', 'costs'],
+  'IT Manager': ['overview', 'tickets', 'people', 'devices', 'security', 'training', 'costs'],
   HR:           ['overview', 'people'],
 }
 
 const DEFAULT_CATS = [{ id: 'c1', name: 'Workspace' }, { id: 'c2', name: 'Service' }]
-const DEFAULT_ORDER = ['overview', 'tickets', 'people', 'queue', 'customers', 'remediation', 'security', 'training', 'costs', 'audit']
+const DEFAULT_ORDER = ['overview', 'tickets', 'people', 'devices', 'queue', 'customers', 'workflows', 'remediation', 'security', 'training', 'costs', 'audit', 'integrations', 'capabilities']
 const DEFAULT_CFG = {
   overview: { cat: 'c1', show: true }, tickets: { cat: 'c1', show: true }, people: { cat: 'c1', show: true },
+  devices: { cat: 'c1', show: true },
   queue: { cat: 'c1', show: true }, customers: { cat: 'c1', show: true }, remediation: { cat: 'c1', show: true },
+  workflows: { cat: 'c1', show: true },
   security: { cat: 'c2', show: true }, training: { cat: 'c2', show: true }, costs: { cat: 'c2', show: true },
-  audit: { cat: 'c2', show: true },
+  audit: { cat: 'c2', show: true }, integrations: { cat: 'c2', show: true }, capabilities: { cat: 'c2', show: true },
 }
 
 export default function App() {
@@ -79,6 +81,7 @@ export default function App() {
   const [manage, setManage] = useState(null)      // person | null
   const [offboard, setOffboard] = useState(null)  // name | null
   const [ticketAct, setTicketAct] = useState(null)// ticket | null
+  const [newClient, setNewClient] = useState(false)
 
   // ---- mobile
   const isMobile = useIsMobile()
@@ -176,13 +179,17 @@ export default function App() {
       case 'overview': return <Overview userFirst={userFirst} grade={grade} gradePct={gradePct} prios={prios} costsAllowed={costsAllowed} tickets={tickets} onWizard={() => openWizard()} onTicketAct={setTicketAct} onCustomize={() => go('settings')} />
       case 'tickets': return <Tickets tickets={tickets} onWizard={() => openWizard()} onTicketAct={setTicketAct} />
       case 'people': return <People people={people} search={search} setSearch={setSearch} onManage={setManage} onOnboard={() => openWizard({ step: 2, type: 'Onboard a user', title: 'Onboard a user — ' })} patched={patched} onRequestPatch={(name) => { setPatched((x) => [...x, name]); toast(`Patch requested for ${name}`) }} />
+      case 'devices': return <Devices onRequest={() => openWizard({ step: 2, type: 'New device', title: 'New device — ' })} />
       case 'security': return <Security grade={grade} gradePct={gradePct} onExport={() => toast("Security report export started — we'll email it to you")} />
       case 'training': return <Training training={TRAINING} nudged={nudged} onNudge={(n) => { setNudged((x) => [...x, n]); toast(`Reminder sent to ${n}`) }} />
       case 'costs': return costsAllowed ? <Costs reclaimed={reclaimed} onReclaim={reclaim} onReclaimAll={reclaimAll} /> : <Restricted />
       case 'queue': return <Queue onAction={(m) => toast(m)} />
-      case 'customers': return <Customers onViewAs={(c) => { setImp({ name: c.admin, role: c.adminRole, company: c.name }); setNav('overview') }} />
+      case 'customers': return <Customers onViewAs={(c) => { setImp({ name: c.admin, role: c.adminRole, company: c.name }); setNav('overview') }} onNewClient={() => setNewClient(true)} />
+      case 'workflows': return <Workflows onAction={(m) => toast(m)} />
       case 'remediation': return <Watchtower onFlag={(cta) => toast(`${cta} — queued`)} />
       case 'audit': return <Audit onExport={() => toast('Audit log export started — CSV will download')} />
+      case 'integrations': return <Integrations onAction={(m, t) => toast(m, t)} />
+      case 'capabilities': return <Capabilities onAction={(m, t) => toast(m, t)} />
       case 'kb': return <KB onArticle={(a) => { setKbArt(a); go('kbArticle') }} onWizard={() => openWizard()} />
       case 'kbArticle': return <KBArticle article={kbArt} onBack={() => go('kb')} onWizard={() => openWizard()} toast={toast} />
       case 'settings': return <Settings clientMode={clientMode} prios={prios} setPrios={setPrios} cats={cats} setCats={setCats} itemCfg={itemCfg} setItemCfg={setItemCfg} itemOrder={itemOrder} setItemOrder={setItemOrder} modeKeys={modeKeys} toast={toast} />
@@ -294,6 +301,7 @@ export default function App() {
       {manage && <Manage person={manage} onClose={() => setManage(null)} onSave={onManageSave} onOffboard={() => { setOffboard(manage.name); setManage(null) }} />}
       {offboard && <Offboard name={offboard} onClose={() => setOffboard(null)} onConfirm={confirmOffboard} />}
       {ticketAct && <TicketAction ticket={ticketAct} onClose={() => setTicketAct(null)} onResolve={resolveTicket} />}
+      {newClient && <NewClient onClose={() => setNewClient(false)} onSubmit={({ company }) => { setNewClient(false); toast(`Onboarding started for ${company}`) }} />}
 
       {/* toast — ink surface with one semantic accent glyph (bright hues legible on black) */}
       {toastMsg && (() => {

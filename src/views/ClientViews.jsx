@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import {
-  HERO, CHART, CHART_LABELS, NIST, LICENSES, ACTIVITY, SEC_ACTIVITY, PILL,
+  HERO, CHART, CHART_LABELS, NIST, LICENSES, ACTIVITY, SEC_ACTIVITY, PILL, DEVICES,
 } from '../data.js'
 import { Pill, Status, Stat, Avatar, ViewHeader, Card, GradeRing, Meter, ActivityFeed, listRowStyle, useIsMobile, pickTopChip } from '../components/ui.jsx'
 import RecordCard from '../components/RecordCard.jsx'
@@ -206,6 +206,62 @@ export function People({ people, search, setSearch, onManage, onOnboard, onReque
         ))}
         {filtered.length === 0 && <div style={{ fontSize: 11, color: 'var(--muted)', textAlign: 'center', padding: 14, fontStyle: 'italic' }}>No people match that search</div>}
       </Card>
+    </>
+  )
+}
+
+/* ---------------------------------------------------------------- Devices */
+const DEV_TONE = { ok: 'success', warn: 'warning', err: 'danger', mut: 'neutral', prov: 'progress' }
+export function Devices({ onRequest }) {
+  const isMobile = useIsMobile()
+  const compliant = DEVICES.filter((d) => d.ck === 'ok').length
+  const patchDue = DEVICES.filter((d) => d.pk === 'warn').length
+  const unassigned = DEVICES.filter((d) => d.assignee === 'Unassigned').length
+  return (
+    <>
+      <ViewHeader title="Devices">
+        <button className="btn btn-dark" onClick={onRequest}>Request a device</button>
+      </ViewHeader>
+      <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
+        <Stat n={DEVICES.length} label="Devices" />
+        <Stat n={`${Math.round(compliant / DEVICES.length * 100)}%`} label="Compliant" />
+        <Stat n={patchDue} label="Patching due" color={patchDue > 0 ? 'var(--warn)' : undefined} />
+        <Stat n={unassigned} label="Unassigned" />
+      </div>
+      {isMobile ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {DEVICES.map((d, i) => (
+            <RecordCard key={i} title={`${d.name} · ${d.model}`} subtitle={d.assignee}
+              status={d.compliance} tone={DEV_TONE[d.ck] || 'neutral'} meta={`Seen ${d.seen}`} showAction={false} />
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 820 }}>
+              <thead><tr>
+                {['Device', 'Assignee', 'Intune compliance', 'Patching', 'Last seen'].map((h, i) => (
+                  <th key={i} style={{ textAlign: i === 4 ? 'right' : 'left', fontSize: 12, fontWeight: 500, color: 'var(--muted)', padding: '16px 28px', borderBottom: '1px solid var(--line2)' }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>
+                {DEVICES.map((d, i) => (
+                  <tr key={i}>
+                    <td style={cell()}>
+                      <div style={{ fontSize: 13.5, fontWeight: 600 }}>{d.name}</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{d.model}</div>
+                    </td>
+                    <td style={{ ...cell(), color: d.assignee === 'Unassigned' ? 'var(--faint)' : 'var(--ink2)' }}>{d.assignee}</td>
+                    <td style={cell()}><Status kind={d.ck}>{d.compliance}</Status></td>
+                    <td style={cell()}><Status kind={d.pk}>{d.patch}</Status></td>
+                    <td style={{ ...cell(), textAlign: 'right', color: 'var(--muted)', fontSize: 12.5 }}>{d.seen}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
     </>
   )
 }

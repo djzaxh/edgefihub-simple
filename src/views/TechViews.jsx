@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
-import { QUEUE, CUSTOMERS, INT_NAMES, FLAGS, AUDIT, firstName } from '../data.js'
-import { Status, Stat, ViewHeader, Card, listRowStyle, mobileCardStyle, useIsMobile, Chip } from '../components/ui.jsx'
+import React, { useState, useRef } from 'react'
+import { QUEUE, CUSTOMERS, INT_NAMES, FLAGS, AUDIT, firstName, INTEGRATIONS, CAPABILITIES, WORKFLOW_TEMPLATES, WORKFLOW_ACTIONS } from '../data.js'
+import { Status, Stat, ViewHeader, Card, Pill, listRowStyle, mobileCardStyle, useIsMobile, Chip } from '../components/ui.jsx'
 import Drawer, { DrawerField } from '../components/Drawer.jsx'
-import { Warn, Check } from '../icons.jsx'
+import { useFlip, DropLine } from '../components/dnd.jsx'
+import { Warn, Check, Plus, Trash, Grip } from '../icons.jsx'
 
 // integration status dot (shared by the Clients table + its detail drawer)
 const intDot = (v) => ({ width: 9, height: 9, borderRadius: '50%', background: v === 1 ? 'var(--faint)' : v === 2 ? 'var(--danger)' : 'var(--line-strong)' })
@@ -139,12 +140,14 @@ export function Queue({ onAction }) {
 }
 
 /* ---------------------------------------------------------------- Clients */
-export function Customers({ onViewAs }) {
+export function Customers({ onViewAs, onNewClient }) {
   const isMobile = useIsMobile()
   const [detail, setDetail] = useState(null)
   return (
     <>
-      <ViewHeader title="Clients" />
+      <ViewHeader title="Clients">
+        {onNewClient && <button className="btn btn-dark" onClick={onNewClient}>New client</button>}
+      </ViewHeader>
       <div className="kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
         <Stat n="12" label="Active clients" />
         <Stat n="438" label="Users under management" />
@@ -295,6 +298,136 @@ export function Audit({ onExport }) {
           </div>
         ))}
         {rows.length === 0 && <div style={{ fontSize: 11.5, color: 'var(--muted)', textAlign: 'center', padding: 16, fontStyle: 'italic' }}>No entries match</div>}
+      </Card>
+    </>
+  )
+}
+
+const intro = (text) => <p style={{ fontSize: 13, color: 'var(--muted)', margin: '-4px 0 18px', maxWidth: 620, lineHeight: 1.5 }}>{text}</p>
+
+// small on/off switch — ink track when on, per brand (ink = action)
+function Switch({ on, onClick }) {
+  return (
+    <button onClick={onClick} role="switch" aria-checked={on} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', padding: 0, position: 'relative', background: on ? 'var(--ink)' : 'var(--line-strong)', transition: 'background .2s ease', flexShrink: 0 }}>
+      <span style={{ position: 'absolute', top: 3, left: on ? 19 : 3, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface)', transition: 'left .2s cubic-bezier(.2,.8,.2,1)' }} />
+    </button>
+  )
+}
+
+/* ---------------------------------------------------------------- Integrations */
+export function Integrations({ onAction }) {
+  const [saved, setSaved] = useState([])
+  const cta = (s) => (s === 'Connected' ? 'Manage' : s.startsWith('Not') ? 'Connect' : 'Reconnect')
+  const act = (it, i) => { setSaved((s) => [...s, i]); onAction(`${cta(it.status)} — ${it.name}`, it.sk === 'err' ? 'success' : 'success') }
+  return (
+    <>
+      <ViewHeader title="Integrations">{datePill('Connected through Hub')}</ViewHeader>
+      {intro('Hub connects to each service with your own business keys, abstracted per capability so providers can be swapped without touching workflows.')}
+      <Card title="Services">
+        {INTEGRATIONS.map((it, i) => (
+          <div key={i} className="row-hover" style={listRowStyle}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <b style={{ fontSize: 13.5, fontWeight: 600, display: 'block' }}>{it.name}</b>
+              <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{it.cat} · {it.detail}</span>
+            </div>
+            <Status kind={it.sk}>{it.status}</Status>
+            {saved.includes(i)
+              ? <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--ok)', whiteSpace: 'nowrap' }}>Saved ✓</span>
+              : <button className={it.sk === 'err' ? 'btn btn-dark btn-sm' : 'btn btn-ghost btn-sm'} style={{ whiteSpace: 'nowrap' }} onClick={() => act(it, i)}>{cta(it.status)}</button>}
+          </div>
+        ))}
+      </Card>
+    </>
+  )
+}
+
+/* ---------------------------------------------------------------- Capabilities */
+export function Capabilities({ onAction }) {
+  const [caps, setCaps] = useState(CAPABILITIES)
+  const toggle = (i) => {
+    const c = caps[i]
+    setCaps((cs) => cs.map((x, j) => (j === i ? { ...x, on: !x.on } : x)))
+    onAction(`${c.name} ${c.on ? 'turned off' : 'turned on'}`, c.on ? 'warn' : 'success')
+  }
+  return (
+    <>
+      <ViewHeader title="Capabilities" />
+      {intro('Feature flags for the platform. Each capability runs on a connected integration — turn off anything a client doesn’t use and it disappears from their workspace.')}
+      <Card title="Platform capabilities">
+        {caps.map((c, i) => (
+          <div key={i} className="row-hover" style={listRowStyle}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <b style={{ fontSize: 13.5, fontWeight: 600, display: 'block', opacity: c.on ? 1 : 0.5 }}>{c.name}</b>
+              <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{c.desc} · via {c.via}</span>
+            </div>
+            <Switch on={c.on} onClick={() => toggle(i)} />
+          </div>
+        ))}
+      </Card>
+    </>
+  )
+}
+
+/* ---------------------------------------------------------------- JML workflow builder */
+export function Workflows({ onAction }) {
+  const [tpl, setTpl] = useState(WORKFLOW_TEMPLATES[0])
+  const [actions, setActions] = useState(WORKFLOW_ACTIONS)
+  const listRef = useRef(null)
+  useFlip(listRef)
+  const drag = useRef(null)
+  const [ghost, setGhost] = useState(null)
+  const [over, setOver] = useState(null)
+  const start = (i) => { drag.current = i; setTimeout(() => setGhost(i), 0) }
+  const onOver = (e, i) => { e.preventDefault(); const r = e.currentTarget.getBoundingClientRect(); setOver(e.clientY > r.top + r.height / 2 ? i + 1 : i) }
+  const drop = () => {
+    const from = drag.current
+    if (from != null && over != null) {
+      const to = from < over ? over - 1 : over
+      if (to !== from) { const n = [...actions]; const [m] = n.splice(from, 1); n.splice(to, 0, m); setActions(n) }
+    }
+    end()
+  }
+  const end = () => { drag.current = null; setGhost(null); setOver(null) }
+  const addAction = () => { setActions((a) => [...a, { id: 'a' + Date.now(), name: 'New action', owner: 'edgefi', ticket: false, dep: true }]); onAction('Action added to workflow') }
+  const del = (id) => setActions((a) => a.filter((x) => x.id !== id))
+  const toggleTicket = (id) => setActions((a) => a.map((x) => (x.id === id ? { ...x, ticket: !x.ticket } : x)))
+
+  return (
+    <>
+      <ViewHeader title="Workflows">
+        <button className="btn btn-dark" onClick={() => onAction('Workflow saved — applies to new ' + tpl.kind + 's')}>Save workflow</button>
+      </ViewHeader>
+      {intro('JML is modeled as configurable workflows — an ordered list of actions. Drag to reorder, each action can wait on the one before it and optionally open a ticket.')}
+      {/* template selector */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
+        {WORKFLOW_TEMPLATES.map((t) => (
+          <button key={t.id} onClick={() => setTpl(t)} className={tpl.id === t.id ? 'btn btn-dark btn-sm' : 'btn btn-ghost btn-sm'}>{t.name}</button>
+        ))}
+      </div>
+      <Card title={`${tpl.name} · actions`} right={<button className="btn btn-ghost btn-sm" onClick={addAction}><Plus /> Add action</button>}>
+        <div ref={listRef} style={{ padding: 16, display: 'flex', flexDirection: 'column' }} onDrop={drop} onDragOver={(e) => e.preventDefault()}>
+          {actions.map((a, i) => (
+            <React.Fragment key={a.id}>
+              {over === i && <DropLine />}
+              <div data-flip={a.id} draggable onDragStart={() => start(i)} onDragEnd={end} onDragOver={(e) => onOver(e, i)} onDrop={drop}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', border: '1px solid var(--line)', borderRadius: 10, background: 'var(--surface)', marginBottom: 8, cursor: 'grab', opacity: ghost === i ? 0.4 : 1 }}>
+                <span style={{ color: 'var(--faint)' }}><Grip /></span>
+                <span style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--soft)', color: 'var(--muted)', fontSize: 11, fontWeight: 600, display: 'grid', placeItems: 'center', flexShrink: 0 }}>{i + 1}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 550 }}>{a.name}</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 2 }}>
+                    <span>Owner · {a.owner}</span>
+                    {a.dep && i > 0 && <span style={{ color: 'var(--faint)' }}>· waits for step {i}</span>}
+                  </div>
+                </div>
+                <button onClick={() => toggleTicket(a.id)} className={a.ticket ? 'btn btn-dark btn-sm' : 'btn btn-ghost btn-sm'} style={{ whiteSpace: 'nowrap' }}>{a.ticket ? 'Creates ticket' : 'No ticket'}</button>
+                <button className="iconbtn" aria-label="Delete action" onClick={() => del(a.id)}><Trash /></button>
+              </div>
+            </React.Fragment>
+          ))}
+          {over === actions.length && <DropLine />}
+          {actions.length === 0 && <div style={{ fontSize: 12, color: 'var(--faint)', fontStyle: 'italic', textAlign: 'center', padding: 20 }}>No actions yet — add one to start the workflow.</div>}
+        </div>
       </Card>
     </>
   )
