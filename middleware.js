@@ -89,7 +89,7 @@ function loginPage(error) {
     <div class="brand"><span>edgefi</span><b>hub</b><span class="dot"></span></div>
     <div class="ey">Private preview</div>
     <h1>Sign in to continue</h1>
-    <p class="sub">This preview is limited to the edgefi team. Enter the access password to continue.</p>
+    <p class="sub">Limited to the edgefi team. The password is in the shared 1Password vault, under &ldquo;Edgefi hub Zach login.&rdquo;</p>
     <label for="password">Password</label>
     <input id="password" name="password" type="password" autocomplete="current-password" autofocus required placeholder="••••••••"/>
     ${error ? '<div class="err">Incorrect password — try again.</div>' : ''}
