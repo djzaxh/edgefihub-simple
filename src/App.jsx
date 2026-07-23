@@ -195,7 +195,12 @@ export default function App() {
   )
 
   return (
-    <div className="app-root" style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100vw', overflow: 'hidden' }}>
+    <div className="app-root" style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100vw',
+      // mobile scrolls the document (so Safari's chrome collapses and the app
+      // fills the viewport); desktop keeps the fixed-height inner-scroll shell
+      overflow: isMobile ? 'visible' : 'hidden',
+      height: isMobile ? 'auto' : undefined,
+      minHeight: isMobile ? '100lvh' : undefined }}>
       {/* impersonation banner */}
       {imp && (
         <div style={{ position: 'sticky', top: 0, zIndex: 60, background: 'var(--purple-soft)', borderBottom: '1px solid var(--purple-soft)', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -212,7 +217,7 @@ export default function App() {
         <>
           {/* one bar only: content scrolls full-height; the view's own heading is the
               title (iOS large-title feel), status bar cleared via safe-area inset */}
-          <main style={{ flex: 1, minHeight: 0, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', position: 'relative', background: 'var(--bg)', paddingTop: 'env(safe-area-inset-top)' }}>
+          <main style={{ flex: 1, minWidth: 0, overflow: 'visible', position: 'relative', background: 'var(--bg)', paddingTop: 'env(safe-area-inset-top)' }}>
             {navLoading && <div style={{ height: 2, position: 'sticky', top: 0, zIndex: 5, overflow: 'hidden' }}><div style={{ position: 'absolute', top: 0, height: '100%', width: '35%', background: 'var(--purple)', animation: 'loadbar .5s ease-out infinite' }} /></div>}
             <div className="content" style={{ padding: '14px 16px calc(env(safe-area-inset-bottom) + 104px)' }}>{renderView()}</div>
           </main>
