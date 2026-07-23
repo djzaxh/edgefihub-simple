@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ===========================================================================
    edgefi hub — design tokens, base styles, animations
    Ported faithfully from the EdgeHub Claude Design source.
