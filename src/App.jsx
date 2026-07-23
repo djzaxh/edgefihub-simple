@@ -215,7 +215,10 @@ export default function App() {
             <div className="content" style={{ padding: '14px 16px calc(env(safe-area-inset-bottom) + 104px)' }}>{renderView()}</div>
           </main>
 
-          {/* the single bar — bottom tab nav, fills the home-indicator area so there's no color seam */}
+          {/* content fades into the safe area / behind Safari chrome (native continuity) */}
+          <div className="bottom-scrim" aria-hidden="true" />
+
+          {/* the single bar — floating glass pill */}
           <BottomNav items={primaryTabs} effNav={effNav} onGo={go} onMore={() => setMoreOpen(true)} moreActive={moreActive} />
 
           {/* demo persona control as a floating dot */}

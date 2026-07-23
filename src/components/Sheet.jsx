@@ -3,59 +3,64 @@ import { Close } from '../icons.jsx'
 import { useIsMobile } from './ui.jsx'
 
 /**
- * Swipe-to-dismiss for a bottom sheet. Touch listeners are attached
- * NON-passively to the grab-handle zone so we can preventDefault() and stop
- * Safari's pull-to-refresh from firing while the user drags the sheet down.
+ * Rubber-band swipe-to-dismiss. The whole sheet follows the finger on a
+ * downward drag that starts at the top of its scroll — it moves 1:1 with a
+ * slight fade, snaps back if released before the threshold, and closes past it.
+ * Touch listeners are NON-passive so we can block Safari's pull-to-refresh.
  */
 function useSwipeDismiss(onClose, enabled) {
   const sheetRef = useRef(null)
-  const handleRef = useRef(null)
   useEffect(() => {
     if (!enabled) return
-    const handle = handleRef.current
     const sheet = sheetRef.current
-    if (!handle || !sheet) return
-    let startY = null, cur = 0, dragging = false
-    const apply = (y) => {
-      sheet.style.transition = y ? 'none' : 'transform .3s cubic-bezier(.16,1,.3,1)'
+    if (!sheet) return
+    let startY = null, dy = 0, dragging = false, atTop = true
+    const apply = (y, animate) => {
+      sheet.style.transition = animate ? 'transform .34s cubic-bezier(.16,1,.3,1), opacity .34s ease' : 'none'
       sheet.style.transform = y ? `translateY(${y}px)` : ''
+      sheet.style.opacity = y ? String(Math.max(0.35, 1 - y / 700)) : ''
     }
-    const ts = (e) => { startY = e.touches[0].clientY; dragging = true; cur = 0 }
+    const ts = (e) => { startY = e.touches[0].clientY; atTop = sheet.scrollTop <= 0; dragging = false; dy = 0 }
     const tm = (e) => {
-      if (!dragging) return
+      if (startY == null) return
       const d = e.touches[0].clientY - startY
-      if (d > 0) { cur = d; apply(d); if (e.cancelable) e.preventDefault() } // block pull-to-refresh
-      else { cur = 0; apply(0) }
+      if (d > 0 && atTop) {
+        dragging = true
+        dy = d < 0 ? 0 : d
+        apply(dy, false)
+        if (e.cancelable) e.preventDefault() // block pull-to-refresh + native scroll while dragging
+      }
     }
-    const te = () => { if (!dragging) return; dragging = false; if (cur > 90) onClose(); else apply(0) }
-    handle.addEventListener('touchstart', ts, { passive: false })
-    handle.addEventListener('touchmove', tm, { passive: false })
-    handle.addEventListener('touchend', te, { passive: true })
-    handle.addEventListener('touchcancel', te, { passive: true })
+    const te = () => {
+      if (dragging) { if (dy > 110) { apply(0, true); onClose() } else apply(0, true) }
+      startY = null; dragging = false; dy = 0
+    }
+    sheet.addEventListener('touchstart', ts, { passive: false })
+    sheet.addEventListener('touchmove', tm, { passive: false })
+    sheet.addEventListener('touchend', te, { passive: true })
+    sheet.addEventListener('touchcancel', te, { passive: true })
     return () => {
-      handle.removeEventListener('touchstart', ts)
-      handle.removeEventListener('touchmove', tm)
-      handle.removeEventListener('touchend', te)
-      handle.removeEventListener('touchcancel', te)
+      sheet.removeEventListener('touchstart', ts)
+      sheet.removeEventListener('touchmove', tm)
+      sheet.removeEventListener('touchend', te)
+      sheet.removeEventListener('touchcancel', te)
     }
   }, [onClose, enabled])
-  return { sheetRef, handleRef }
+  return sheetRef
 }
 
 /**
- * Sheet — bottom sheet on mobile (grab handle + swipe-to-dismiss, no X),
+ * Sheet — bottom sheet on mobile (grab handle + rubber-band swipe, no X),
  * centered dialog on desktop (with an X). Backdrop tap always closes.
  */
 export default function Sheet({ onClose, maxWidth = 520, children }) {
   const isMobile = useIsMobile()
-  const { sheetRef, handleRef } = useSwipeDismiss(onClose, isMobile)
+  const sheetRef = useSwipeDismiss(onClose, isMobile)
   return (
     <div className="overlay" onClick={onClose}>
       <div className="dialog" ref={sheetRef} style={{ maxWidth }} onClick={(e) => e.stopPropagation()}>
         {isMobile ? (
-          <div ref={handleRef} className="sheet-grip-zone" aria-label="Drag down to close">
-            <span className="sheet-grip" />
-          </div>
+          <div className="sheet-grip-zone" aria-hidden="true"><span className="sheet-grip" /></div>
         ) : (
           <button className="iconbtn sheet-x" onClick={onClose} aria-label="Close"><Close /></button>
         )}
