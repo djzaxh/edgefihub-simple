@@ -323,17 +323,21 @@ function TopNav({ items, effNav, onGo, logoMark, dark, setDark, userName, imp, d
       setDragLeft(x)
     }
   }
-  const up = () => {
+  const up = (e) => {
     const d = drag.current
     if (!d.active) return
     d.active = false
     if (d.moved && dragLeft != null) {
+      // drag ended → snap to the nearest tab
       const center = dragLeft + selW / 2
       let best = null, bestDist = Infinity
       for (const k of items) { const el = btnRefs.current[k]; if (!el) continue; const c = el.offsetLeft + el.offsetWidth / 2; const dist = Math.abs(c - center); if (dist < bestDist) { bestDist = dist; best = k } }
       suppressClick.current = true
       setTimeout(() => { suppressClick.current = false }, 60)
       if (best && best !== effNav) onGo(best)
+    } else if (e && typeof e.clientX === 'number') {
+      // a tap → route to the tab under the pointer (pointer-capture can eat the click)
+      for (const k of items) { const el = btnRefs.current[k]; if (!el) continue; const r = el.getBoundingClientRect(); if (e.clientX >= r.left && e.clientX <= r.right) { if (k !== effNav) onGo(k); break } }
     }
     setDragLeft(null)
   }
