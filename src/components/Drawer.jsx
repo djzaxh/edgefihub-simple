@@ -17,20 +17,20 @@ export default function Drawer({ onClose, title, eyebrow, children, footer, maxW
   }, [onClose])
 
   const head = (
-    <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--line)', paddingRight: 48 }}>
-      {eyebrow && <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--purple)', letterSpacing: '.04em', textTransform: 'uppercase' }}>{eyebrow}</div>}
-      <div style={{ fontSize: 17, fontWeight: 600, marginTop: eyebrow ? 3 : 0 }}>{title}</div>
+    <div className="drawer-head" style={{ padding: '24px 24px 16px', paddingRight: 60 }}>
+      {eyebrow && <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--purple)', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 6 }}>{eyebrow}</div>}
+      <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-.3px', lineHeight: 1.25 }}>{title}</div>
     </div>
   )
   const foot = footer && (
-    <div style={{ padding: '14px 22px', borderTop: '1px solid var(--line)', background: 'var(--soft2)', display: 'flex', gap: 10, alignItems: 'center' }}>{footer}</div>
+    <div className="drawer-foot" style={{ padding: '16px 24px', borderTop: '1px solid var(--line2)', display: 'flex', gap: 10, alignItems: 'center' }}>{footer}</div>
   )
 
   if (isMobile) {
     return (
       <Sheet onClose={onClose} maxWidth={520}>
         {head}
-        <div style={{ padding: '18px 22px' }}>{children}</div>
+        <div style={{ padding: '4px 24px 22px' }}>{children}</div>
         {foot}
       </Sheet>
     )
@@ -40,19 +40,19 @@ export default function Drawer({ onClose, title, eyebrow, children, footer, maxW
       <div className="drawer-panel" style={{ maxWidth }} onClick={(e) => e.stopPropagation()}>
         <button className="iconbtn drawer-x" onClick={onClose} aria-label="Close"><Close /></button>
         {head}
-        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 22px' }}>{children}</div>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '4px 24px 24px' }}>{children}</div>
         {foot}
       </div>
     </div>
   )
 }
 
-// a labeled detail row for drawer bodies
+// a labeled detail row for drawer bodies — clean, modern key/value
 export function DrawerField({ label, children }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, padding: '9px 0', borderBottom: '1px solid var(--line2)' }}>
-      <span style={{ fontSize: 12, color: 'var(--muted)' }}>{label}</span>
-      <span style={{ fontSize: 13, fontWeight: 500, textAlign: 'right', minWidth: 0 }}>{children}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, padding: '12px 0', borderBottom: '1px solid var(--line2)' }}>
+      <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{label}</span>
+      <span style={{ fontSize: 13.5, fontWeight: 500, textAlign: 'right', color: 'var(--ink)', minWidth: 0 }}>{children}</span>
     </div>
   )
 }

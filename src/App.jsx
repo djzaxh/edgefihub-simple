@@ -341,7 +341,6 @@ function TopNav({ items, effNav, onGo, logoMark, dark, setDark, userName, imp, d
     }
     setDragLeft(null)
   }
-  const divider = <span style={{ width: 1, height: 22, background: 'var(--line)', flexShrink: 0 }} />
   return (
     <div style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', justifyContent: 'center', padding: '14px 16px', pointerEvents: 'none' }}>
       {/* one centered floating glass pill: logo · tabs (selector) · account */}
@@ -367,7 +366,6 @@ function TopNav({ items, effNav, onGo, logoMark, dark, setDark, userName, imp, d
             )
           })}
         </div>
-        {divider}
         {/* consolidated account + controls */}
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <button onClick={() => setDemoOpen((o) => !o)} aria-label="Account and controls" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: '3px 4px 3px 8px', borderRadius: 999 }}>

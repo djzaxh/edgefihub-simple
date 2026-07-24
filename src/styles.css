@@ -290,24 +290,57 @@ body.dark .glass-selector {
   }
 }
 
-/* detail drawer — right-side panel on desktop */
+/* detail drawer — a floating liquid-glass panel on desktop, same material
+   language as the top nav pill / bottom tab bar */
 .drawer-overlay {
   position: fixed; inset: 0; z-index: 100;
   background: rgba(10,10,10,.28);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   display: flex; justify-content: flex-end;
+  padding: 14px;
   animation: fade .2s ease both;
 }
 .drawer-panel {
   position: relative;
   width: 100%; height: 100%;
   background: var(--surface);
-  border-left: 1px solid var(--line);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  overflow: hidden;
   display: flex; flex-direction: column;
-  box-shadow: -14px 0 44px rgba(10,10,10,.14);
-  animation: drawerIn .34s cubic-bezier(.16,1,.3,1) both;
+  box-shadow: 0 24px 70px rgba(10,10,10,.24), inset 0 1px 1px rgba(255,255,255,.5);
+  animation: drawerIn .36s cubic-bezier(.16,1,.3,1) both;
 }
-.drawer-x { position: absolute; top: 13px; right: 13px; z-index: 2; }
-@keyframes drawerIn { from { transform: translateX(28px); opacity: .5 } to { transform: none; opacity: 1 } }
+@supports ((backdrop-filter: blur(20px)) or (-webkit-backdrop-filter: blur(20px))) {
+  .drawer-panel {
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    backdrop-filter: saturate(180%) blur(24px);
+  }
+}
+body.dark .drawer-panel {
+  box-shadow: 0 24px 70px rgba(0,0,0,.45), inset 0 1px 1px rgba(255,255,255,.08);
+}
+.drawer-head {
+  position: relative;
+  flex-shrink: 0;
+}
+.drawer-head::after {
+  content: ''; position: absolute; left: 24px; right: 24px; bottom: 0; height: 1px;
+  background: var(--line2);
+}
+.drawer-x {
+  position: absolute; top: 16px; right: 16px; z-index: 2;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--soft); color: var(--muted);
+  border: 1px solid var(--line);
+}
+.drawer-x:hover { background: var(--line); color: var(--ink); }
+.drawer-foot {
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+}
+@keyframes drawerIn { from { transform: translateX(40px) scale(.98); opacity: 0 } to { transform: none; opacity: 1 } }
 
 /* keyboard focus ring — ink, per brand */
 :focus-visible {
