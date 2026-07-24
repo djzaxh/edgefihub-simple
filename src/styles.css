@@ -5,14 +5,14 @@
 
 :root,
 body {
-  --bg: #FFFFFF;        /* canvas = light white */
-  --surface: #ECECEC;   /* cards / tables / nav = soft gray */
-  --soft: #E2E2E2;
-  --soft2: #F4F4F4;
-  --line: #DDDDDD;
-  --line2: #E6E6E6;
-  --line-strong: #CFCFCF;
-  --dot: rgba(10, 10, 10, 0.05);  /* subtle background texture */
+  --bg: #F7F7F7;        /* canvas = soft off-white */
+  --surface: #FCFCFC;   /* cards / tables / nav = light, near-white */
+  --soft: #F1F1F1;
+  --soft2: #F8F8F8;
+  --line: #ECECEC;      /* lighter, softer borders */
+  --line2: #F3F3F3;
+  --line-strong: #E2E2E2;
+  --dot: rgba(10, 10, 10, 0.045);  /* subtle background texture */
   --ink: #0A0A0A;
   --ink2: #404040;
   --muted: #6B6B6B;

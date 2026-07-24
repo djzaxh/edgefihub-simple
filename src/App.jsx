@@ -193,7 +193,7 @@ export default function App() {
       case 'capabilities': return <Capabilities onAction={(m, t) => toast(m, t)} />
       case 'kb': return <KB onArticle={(a) => { setKbArt(a); go('kbArticle') }} onWizard={() => openWizard()} />
       case 'kbArticle': return <KBArticle article={kbArt} onBack={() => go('kb')} onWizard={() => openWizard()} toast={toast} />
-      case 'settings': return <Settings clientMode={clientMode} prios={prios} setPrios={setPrios} cats={cats} setCats={setCats} itemCfg={itemCfg} setItemCfg={setItemCfg} itemOrder={itemOrder} setItemOrder={setItemOrder} modeKeys={modeKeys} toast={toast} />
+      case 'settings': return <Settings modeKeys={modeKeys} itemCfg={itemCfg} setItemCfg={setItemCfg} toast={toast} />
       default: return null
     }
   }
@@ -246,7 +246,7 @@ export default function App() {
       ) : (
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
         {/* floating glass selector pill — top */}
-        <TopNav items={allowedPages} effNav={effNav} onGo={go} logoMark={logoMark}
+        <TopNav items={allowedPages.filter((k) => itemCfg[k]?.show !== false)} effNav={effNav} onGo={go} logoMark={logoMark}
           dark={dark} setDark={setDark} userName={userName} imp={imp}
           demoOpen={demoOpen} setDemoOpen={setDemoOpen}
           personaProps={{ workspace, setWorkspace, role, setRole, grade, setGrade, imp, clientMode }}
@@ -281,8 +281,8 @@ export default function App() {
           info:    { color: '#B3B3B3',     icon: <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor', display: 'block' }} /> },
         }[toastMsg.type] || { color: 'var(--lime)', icon: <Check size={14} sw={3} /> }
         return (
-          <div style={{ position: 'fixed', bottom: isMobile ? 'calc(env(safe-area-inset-bottom) + 90px)' : 24, left: '50%', transform: 'translateX(-50%)', zIndex: 200, background: 'var(--ink)', color: 'var(--surface)', borderRadius: 10, padding: '11px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 9, boxShadow: '0 8px 30px rgba(10,10,10,.25)', animation: 'rise .25s cubic-bezier(.2,.8,.2,1) both', maxWidth: 'calc(100vw - 32px)' }}>
-            <span style={{ color: TT.color, display: 'grid' }}>{TT.icon}</span>{toastMsg.m}
+          <div style={{ position: 'fixed', bottom: isMobile ? 'calc(env(safe-area-inset-bottom) + 90px)' : 28, left: '50%', transform: 'translateX(-50%)', zIndex: 300, background: 'var(--ink)', color: 'var(--surface)', borderRadius: 12, padding: '12px 18px', fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 10px 34px rgba(10,10,10,.28), 0 0 0 1px rgba(255,255,255,.06) inset', animation: 'rise .25s cubic-bezier(.2,.8,.2,1) both', maxWidth: 'calc(100vw - 32px)', whiteSpace: 'nowrap' }}>
+            <span style={{ color: TT.color, display: 'grid', flexShrink: 0 }}>{TT.icon}</span>{toastMsg.m}
           </div>
         )
       })()}
@@ -342,11 +342,10 @@ function TopNav({ items, effNav, onGo, logoMark, dark, setDark, userName, imp, d
     <div style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', justifyContent: 'center', padding: '14px 16px', pointerEvents: 'none' }}>
       {/* one centered floating glass pill: logo · tabs (selector) · account */}
       <nav className="glass" style={{ pointerEvents: 'auto', position: 'relative', display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px 6px 14px', borderRadius: 999, border: '1px solid var(--line)', boxShadow: '0 10px 30px rgba(10,10,10,.12)', maxWidth: 'calc(100vw - 32px)' }}>
-        <button onClick={() => onGo(items[0])} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink)', padding: 0, flexShrink: 0 }}>
+        <button onClick={() => onGo(items[0])} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink)', padding: '0 4px 0 2px', flexShrink: 0 }}>
           {logoMark}
           <b style={{ fontSize: 15.5, letterSpacing: '-.2px', fontWeight: 500 }}>edgefi <span style={{ fontWeight: 700 }}>hub</span></b>
         </button>
-        {divider}
         {/* tabs track (scroll-aware sliding selector) */}
         <div ref={trackRef} onScroll={(e) => setScrollX(e.currentTarget.scrollLeft)}
           onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
